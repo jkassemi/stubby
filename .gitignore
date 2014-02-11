@@ -1,0 +1,14 @@
+.bundle
+bin
+cscope*
+log
+coverage
+vendor
+tmp
+*.swp
+*.log
+*.swp
+.yardoc
+*DS_Store
+*.un~
+Gemfile.lock

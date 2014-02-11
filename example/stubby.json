@@ -1,0 +1,44 @@
+{
+  "staging": {
+    "_comment": "DNS 10.0.1.1 for admin.example.com",
+    "admin.example.com": "dns-a://10.0.1.1",
+    "admin.example.com": "10.0.1.1",
+
+    "_comment": "CNAME admin2.example.com => admin.example.com",
+    "admin2.example.com": "dns-cname://admin.example.com",
+
+    "_comment": "if protocol present, DNS resolves to stubby",
+    
+    "_comment": "# DNS stubby, transparent HTTP proxy to 10.0.1.1, no host substitution (IP given)",
+    "(http?:\/\/)?merchant.example.com": "http://10.0.1.1",
+
+    "_comment": "# DNS stubby, transparent HTTP proxy to 10.0.1.1, no host substitution (IP given)",
+    "(https?:\/\/)?.*.example.io": "http://10.0.1.1",
+
+    "_comment": "# DNS stubby, all paths proxy to http://en.wikipedia.org/wiki/RTFM, host substitution",
+    "(https?:\/\/)?.*mail.*yahoo.*": "http://en.wikipedia.org/wiki/RTFM",
+
+    "_comment": "# DNS stubby, all paths proxied (no path, not an IP)",
+    "(https?:\/\/)?yahoo.com": "http//duckduckgo.com",
+
+    "_comment": "# DNS stubby, all paths 302 redirect to duckduckgo.com (no path)",
+    "(https?:\/\/)?yahoo.com": "http-redirect://duckduckgo.com",
+
+    "_comment": "# DNS stubby, all paths 302 redirect to duckduckgo.com https (no path)",
+    "(https?:\/\/)?yahoo.com": "https-redirect://duckduckgo.com",
+
+    "_comment": "DNS stubby (for all TLDs), file server contents from dir /var/www/tmp",
+    "stubby\\..*": "file:///var/www/tmp",
+
+    "_comment": "DNS stubby, serve HTTP from stubby recipe root (~/.stubby/api.example.com)",
+    "api.example.com": "file://-",
+
+    "_comment": "All SMTP traffic (NOT YET FUNCTIONAL)",
+    "smtp://.*": "log:///var/log/out.txt"
+  },
+
+  "production": {
+    "((?<scheme>https):\/\/)?merchant.example.com": "@",
+    "((?<scheme>https):\/\/)?.*.example.io": "@"
+  }
+}
