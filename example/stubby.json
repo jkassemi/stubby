@@ -31,7 +31,7 @@
     "stubby\\..*": "file:///var/www/tmp",
 
     "_comment": "DNS stubby, serve HTTP from stubby recipe root (~/.stubby/api.example.com)",
-    "api.example.com": "file://-",
+    "api.example.com": "file://~/.stubby/example/files",
 
     "_comment": "All SMTP traffic (NOT YET FUNCTIONAL)",
     "smtp://.*": "log:///var/log/out.txt"
