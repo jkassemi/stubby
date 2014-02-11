@@ -10,7 +10,7 @@ It's designed to allow you to:
 develop without the need of a development machine you're hosting.
 
 * get a client system pointed to a dev version of their web app by
-providing them a config file (no describing how to launch hosts)
+providing them a config file (no describing how to edit a hosts file)
 
 * lock down access to a dev system only to users with a configuration
 they've recevied diretly from you.
