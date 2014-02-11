@@ -84,6 +84,10 @@ module Stubby
       # TODO: we're not doing a search of the installed stubs'
       # version, but we have a convention of using a ~/.stubby/NAME
       # location, so this shouldn't be a problem for the POC
+      if name =~ /https?:\/\//
+        name = File.basename(name).split(".").first
+      end
+
       latest(name).uninstall
     end
 
