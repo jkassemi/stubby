@@ -4,6 +4,7 @@ module Stubby
   class Stub
     attr_accessor :target, :path
 
+    # TODO: target is mode, rename
     def initialize(path, target=nil)
       self.path = path
       self.target = target

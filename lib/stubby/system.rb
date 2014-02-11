@@ -33,10 +33,12 @@ module Stubby
     end
 
     def path
+      # TODO: configurable
       File.expand_path("~/.stubby/system.json")
     end
 
     def search_paths
+      # TODO: configurable
       [File.expand_path("~/.stubby")]
     end
 
@@ -55,6 +57,7 @@ module Stubby
     end
 
     def installed_stubs
+      # TODO: clean me
       Hash[search_paths.collect { |search_path|
         Dir[search_path + "/**"]
       }.flatten.collect { |path|
@@ -64,6 +67,7 @@ module Stubby
     end
 
     def loaded_stubs
+      # TODO: clean me
       is = installed_stubs
 
       if File.exists?(path)

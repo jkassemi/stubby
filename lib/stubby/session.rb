@@ -25,6 +25,7 @@ module Stubby
 
     def search(trigger)
       system.stubs.each do |name, stub|
+        # TODO: In parallel, this'll get slow
         res = stub.search(trigger)
         return res if res
       end

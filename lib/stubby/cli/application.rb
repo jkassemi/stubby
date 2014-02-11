@@ -113,6 +113,9 @@ module Stubby
 
         > $ stubby install http://example.com/mystub.zip
         > mystub [mode1,mode2]
+
+        # TODO:
+        > $ stubby install ./stubby.json
       LONGDESC
       def install(name)
         session.registry.install(name)
@@ -131,6 +134,7 @@ module Stubby
 
       private
       def session
+        # TODO: allow configuration of this
         @session ||= Session.new("172.16.123.1").tap do |session|
           session.extensions << Extensions::DNS::Server.new
           session.extensions << Extensions::HTTP::Server.new
