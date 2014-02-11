@@ -6,14 +6,13 @@ is currently only designed to run on OS X.
 
 It's designed to allow you to:
 
-* configure stubs for your company's API, allowing customers to
-develop without the need of a development machine you're hosting.
+* distribute a spec for your API so developers can run basic tests without
+hitting your dev server.
 
-* get a client system pointed to a dev version of their web app by
-providing them a config file (no describing how to edit a hosts file)
+* point a client to the right version of an app without editing a hosts file.
 
-* lock down access to a dev system only to users with a configuration
-they've recevied diretly from you.
+* lock down access to a dev system only to users running a stubby.json config
+from your project.
 
 ## Installation
 
