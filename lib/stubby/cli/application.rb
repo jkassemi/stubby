@@ -103,6 +103,17 @@ module Stubby
       end
 
       desc "install", "Install a stub"
+      long_desc <<-LONGDESC
+        Set mode for NAME. If MODE is specified, stubby agent will
+        assign that mode to NAME. Otherwise stubby will reset to default
+        for the mode (no configurations applied)
+
+        > $ stubby install github
+        > _github_
+
+        > $ stubby install http://example.com/mystub.zip
+        > mystub [mode1,mode2]
+      LONGDESC
       def install(name)
         session.registry.install(name)
       end

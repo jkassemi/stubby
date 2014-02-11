@@ -71,7 +71,13 @@ module Stubby
     end
 
     def install(name)
-      latest(name).install
+      if name =~ /https?:\/\//
+        source = name
+        name = File.basename(name).split(".").first
+        RegistryItem.new(name, "v1.0.0", source).install
+      else
+        latest(name).install
+      end
     end
 
     def uninstall(name)
