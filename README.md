@@ -1,10 +1,10 @@
 # Stubby
 
-A local DNS server and HTTP application that provides a package manager
+A local DNS and HTTP server combo that provides a package manager
 solution to configuring network systems on a development machine. This
 is currently only designed to run on OS X.
 
-It's currently very much a proof of concept, but it's designed to allow you to
+It's designed to allow you to:
 
 * configure stubs for your company's API, allowing customers to
 develop without the need of a development machine you're hosting.
@@ -159,3 +159,9 @@ This is designed to allow you to create API stubs (success responses, for instan
 
 
 ### HTTP Redirects
+
+Given a rule:
+
+		"(https?:\/\/)?yahoo.com": "http-redirect://duckduckgo.com"
+		
+DNS will resolve to the stubby server, and the web request to http://yahoo.com will redirect to http://duckduckgo.com.
