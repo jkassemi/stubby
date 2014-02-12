@@ -16,13 +16,6 @@ module Stubby
       @version.slice(1, @version.length)
     end
 
-    def installed?
-      # TODO: obviously we're not doing a search of the installed
-      # version, but we have a convention of using a ~/.stubby/NAME
-      # location, so this shouldn't be a problem for a while
-      File.exists? File.expand_path("~/.stubby/#{name}")
-    end
-
     def install
       # TODO: this should fail gracefully - right now it dies
       # unzipping a non-existent file if the zip doesn't exist, for instance
@@ -64,10 +57,6 @@ module Stubby
 
     def latest(name)
       versions(name).first
-    end
-
-    def installed?(name)
-      latest(name).installed?
     end
 
     def install(name)

@@ -14,3 +14,5 @@ gem 'ipaddress'
 gem 'httpi'
 gem 'thor'
 gem 'listen', :github => "guard/listen"
+gem 'rspec'
+gem 'webmock'
