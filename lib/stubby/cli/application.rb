@@ -138,6 +138,7 @@ module Stubby
         @session ||= Session.new("172.16.123.1").tap do |session|
           session.extensions << Extensions::DNS::Server.new
           session.extensions << Extensions::HTTP::Server.new
+          session.extensions << Extensions::Reload.new
         end
       end
 

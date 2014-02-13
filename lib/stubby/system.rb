@@ -1,11 +1,10 @@
 require 'stubby/stub'
 require 'listen'
-require 'pry'
 
 module Stubby
   class System
     def initialize
-      stubs and listen
+      stubs
     end
 
     def dump
@@ -16,6 +15,10 @@ module Stubby
 
     def stubs
       @stubs ||= installed_stubs.merge(loaded_stubs)
+    end
+
+    def reload
+      @stubs = nil and stubs
     end
 
     def target(name, mode=nil)
@@ -43,19 +46,6 @@ module Stubby
     end
 
     private
-    def listen
-      listener = Listen.to(File.dirname(path)) do |modified, added, removed|
-        (modified + added).each do |mpath|
-          if File.identical?(path, mpath)
-            puts "[INFO] Detected config change, reloading #{path}..."
-            @stubs = nil and stubs
-          end
-        end
-      end
-
-      listener.start
-    end
-
     def installed_stubs
       # TODO: clean me
       Hash[search_paths.collect { |search_path|

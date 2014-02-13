@@ -51,14 +51,21 @@ module Stubby
     end
 
     def run_extensions
-      trap("INT") { stop_extensions }
       Thread.abort_on_exception = true
 
-      @extensions.collect { |plugin|
+      @running = @extensions.collect { |plugin|
         Thread.new { 
           plugin.run!(self) 
         }
-      }.map(&:join)
+      }
+
+      Thread.new {
+        sleep 3
+        puts "CTRL-C to exit stubby"
+        trap("INT") { stop_extensions }
+      }
+
+      @running.map(&:join)
     ensure
       stop_extensions
     end
