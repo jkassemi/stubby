@@ -23,54 +23,57 @@ module Extensions
           set :stubby_session, session
           super()
         end
+
+        def adapter(name, &block)
+          adapters[name] = block
+        end
+
+        def adapters
+          @adapters ||= {}
+        end
       end
 
       set :run, false
       set :static, false
 
-      get(//) do
-        # TODO: LOL @ SPAGHETTI. Eat it up.
-        if instruction.nil?
-          not_found
+      adapter "http-redirect" do
+        url.scheme = "http"
+        url.path = request.path if url.path.to_s.empty?
+        redirect to(url.to_s)
+      end
 
-        elsif url.scheme == "http-redirect"
-          url.scheme = "http"
-          url.path = request.path if url.path.to_s.empty?
-          redirect to(url.to_s)
+      adapter "file" do
+        paths = []
 
-        elsif url.scheme == "https-redirect"
-          url.scheme = "https"
-          url.path = request.path if url.path.to_s.empty?
-          redirect to(url.to_s)
+        if url.host == "-"
+          paths << File.expand_path(File.join("~/.stubby/#{request.host}", request.path))
+          paths << File.expand_path(File.join("/usr/local/stubby/#{request.host}", request.path))
+        else
+          paths << File.expand_path(File.join(url.path, request.path))
+        end
 
-        elsif url.scheme == "file"
-          paths = []
+        paths.each do |path|
+          next if path.index(url.path) != 0
+          
+          p = [path, File.join(path, "index.html")].select { |path|
+            File.exists?(path) and !File.directory?(path)
+          }.first
 
-          if url.host == "-"
-            paths << File.expand_path(File.join("~/.stubby/#{request.host}", request.path))
-            paths << File.expand_path(File.join("/usr/local/stubby/#{request.host}", request.path))
-          else
-            paths << File.expand_path(File.join(url.path, request.path))
-          end
+          send_file(p) and break unless p.nil?
+        end
 
-          paths.each do |path|
-            next if path.index(url.path) != 0
-            
-            p = [path, File.join(path, "index.html")].select { |path|
-              File.exists?(path) and !File.directory?(path)
-            }.first
+        not_found(paths.join(",\n"))
+      end
 
-            send_file(p) and break unless p.nil?
-          end
-
-          not_found(paths.join(",\n"))
-
-        elsif url.path.empty?
+      adapter "default" do
+        if url.path.empty?
           # Proxy all requests, preserve incoming path
           out = url.dup
           out.path = request.path
           request = HTTPI::Request.new
           request.url = out.to_s
+
+          puts request.inspect
 
           response = HTTPI.get(request)
 
@@ -94,6 +97,16 @@ module Extensions
           status(response.code)
           headers(response.headers)
           body(response.body)
+        end
+      end
+
+      get(//) do
+        if instruction.nil?
+          not_found
+        elsif adapter=self.class.adapters[url.scheme]
+          instance_eval &adapter
+        else
+          instance_eval &self.class.adapters["default"]
         end
       end	
 
@@ -129,10 +142,6 @@ module Extensions
     class Server
       def initialize
         @log = Logger.new(STDOUT)
-      end
-
-      def handler
-        Rack::Handler.get("thin")
       end
 
       def run!(session)

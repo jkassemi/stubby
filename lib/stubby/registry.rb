@@ -19,11 +19,13 @@ module Stubby
     def install
       # TODO: this should fail gracefully - right now it dies
       # unzipping a non-existent file if the zip doesn't exist, for instance
+      puts "source: #{source} - name: #{name}"
       if File.exists? source
         uninstall
         `ln -s #{source} ~/.stubby/#{name}`
       else
         `mkdir -p ~/.stubby`
+        download source, "~/.stubby/#{name}.zip"
         `curl #{source} > ~/.stubby/#{name}.zip`
         `unzip ~/.stubby/#{name}.zip`
         `rm ~/.stubby/#{name}.zip`
@@ -34,6 +36,9 @@ module Stubby
       `rm -rf ~/.stubby/#{name}`
     end
 
+    def download(source, destination)
+      `curl #{source} #{destination}` 
+    end
   end
 
   class Registry
@@ -55,17 +60,31 @@ module Stubby
       end
     end
 
+    def version(name, version)
+      version = version.gsub("v", "")
+
+      index[name].detect { |stub|
+        stub.version == version
+      }
+    end
+
     def latest(name)
       versions(name).first
     end
 
-    def install(name)
+    def install(name, v=nil)
       if name =~ /https?:\/\//
         source = name
         name = File.basename(name).split(".").first
         RegistryItem.new(name, "v1.0.0", source).install
       else
-        latest(name).install
+        stub = v.nil? ? latest(name) : version(name, v) 
+
+        if stub
+          stub.install
+        else
+          puts "[ERROR] Cannot find #{name} at #{v}"
+        end
       end
     end
 

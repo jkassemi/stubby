@@ -57,7 +57,42 @@ describe Stubby::Registry do
   end
 
   describe "#install" do
+    context "when from source url" do
+      it "installs from source" do
+        source = "http://example.com/example.zip"
 
+        expect(Stubby::RegistryItem).to receive(:new).
+          with(anything(), anything(), source).
+          and_return(double(:install => true))
+
+        subject.install(source)
+      end
+    end
+
+    context "when version specified" do
+      it "finds and installs version" do
+        expect_any_instance_of(Stubby::RegistryItem).to receive(:download).
+          with("http://example.com/stubby.zip", anything())
+
+        subject.install("example", "1.0.0")
+      end
+
+      it "finds and installs version with a v" do
+        expect_any_instance_of(Stubby::RegistryItem).to receive(:download).
+          with("http://example.com/stubby.zip", anything())
+
+        subject.install("example", "v1.0.0")
+      end
+    end
+
+    context "when no version specified" do
+      it "finds and installs latest" do
+        expect_any_instance_of(Stubby::RegistryItem).to receive(:download).
+          with("http://example.com/stubby2.zip", anything())
+
+        subject.install("example")
+      end
+    end
   end
 
   describe "#uninstall" do
