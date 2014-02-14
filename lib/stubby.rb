@@ -1,3 +1,4 @@
+require 'stubby/extensions/dns/osx'
 require 'stubby/extensions/dns'
 require 'stubby/extensions/http'
 require 'stubby/extensions/reload'
