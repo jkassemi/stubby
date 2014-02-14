@@ -104,6 +104,7 @@ module Stubby
 
       desc "install", "Install a stub"
       option(:version)
+      option(:source)
       long_desc <<-LONGDESC
         > $ stubby install github
         > _github_
@@ -114,11 +115,14 @@ module Stubby
         > $ stubby install github --version=v0.0.1
         > github [mode1,mode2]
 
+        > $ stubby install github --version=v0.0.1 --source=/Users/bob/github.zip
+        > github [mode1,mode2]
+
         # TODO:
         > $ stubby install ./stubby.json
       LONGDESC
       def install(name)
-        session.registry.install(name, options[:version])
+        session.registry.install(name, options)
       end
 
       desc "update", "Remove stub and then install stub"
