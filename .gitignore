@@ -1,5 +1,4 @@
 .bundle
-bin
 cscope*
 log
 coverage
