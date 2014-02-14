@@ -14,6 +14,17 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = ">= 1.8.23"
   s.rubyforge_project         = "stubby"
  
+  s.add_dependency 'rubydns'
+  s.add_dependency 'ipaddress'
+  s.add_dependency 'sinatra'
+  s.add_dependency 'liquid'
+  s.add_dependency 'oj'
+  s.add_dependency 'httpi'
+  s.add_dependency 'rack-ssl'
+  s.add_dependency 'dns-zonefile'
+  s.add_dependency 'thor'
+  s.add_dependency 'listen'
+
   s.add_development_dependency "rspec"
  
   s.files        = Dir.glob("{bin,lib}/**/*") + %w(LICENSE README.md)

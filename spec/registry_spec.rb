@@ -25,13 +25,22 @@ describe Stubby::Registry do
     end
 
     context "when remote index not available" do
-      before { stub_request(:get, /github\.com.*/).
-                to_return(status: 500) }
+      before do
+        stub_request(:get, /github\.com.*/).to_return(status: 500)
+      end
 
-      it "provides a name => RegistryItem hash" do
+      it "provides a name => RegistryItem hash when the index exists" do
+        subject.stub(:local_index) { {"example" => {"v0.0.1" => "bob"}}}
+
         expect(subject.index).to have_key("example")
         expect(subject.index["example"]).to be_instance_of(Array)
         expect(subject.index["example"].first).to be_instance_of(Stubby::RegistryItem)
+      end
+
+      it "provides an empty Hash when the index doesn't exist" do
+        subject.stub(:local_index) { {} }
+
+        expect(subject.index).eql?({})
       end
     end
   end
@@ -70,18 +79,22 @@ describe Stubby::Registry do
     end
 
     context "when version specified" do
+      before do
+        subject.stub(:local_index) { {"example" => {"v1.0.0" => "bob"}}}
+      end
+
       it "finds and installs version" do
         expect_any_instance_of(Stubby::RegistryItem).to receive(:download).
           with("http://example.com/stubby.zip", anything())
 
-        subject.install("example", "1.0.0")
+        subject.install("example", version: "1.0.0")
       end
 
       it "finds and installs version with a v" do
         expect_any_instance_of(Stubby::RegistryItem).to receive(:download).
           with("http://example.com/stubby.zip", anything())
 
-        subject.install("example", "v1.0.0")
+        subject.install("example", version: "v1.0.0")
       end
     end
 

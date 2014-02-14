@@ -38,19 +38,7 @@ module Extensions
     			url.host = @session.host 
     		end
 
-    		response_resource_class = {
-    			a: 	IN::A,
-    			aaaa: 	IN::AAAA,
-    			srv: 	IN::SRV,
-    			wks:	IN::WKS,
-    			minfo:	IN::MINFO,
-    			mx:	IN::MX,
-    			ns:	IN::NS,
-    			ptr:	IN::PTR,
-    			soa:	IN::SOA,
-    			txt: 	IN::TXT,
-    			cname: 	IN::CNAME
-    		}[url.scheme.gsub("dns-", "").to_sym] || IN::A
+    		response_resource_class = resource url.scheme.gsub('dns-', '')
 
     		if url.host.to_s.empty?
     			url.host = @session.host
@@ -84,6 +72,24 @@ module Extensions
 
       
       private
+
+      def resource(pattern)
+        return IN::A unless pattern.respond_to? :to_sym
+
+        {
+          a:      IN::A,
+          aaaa:   IN::AAAA,
+          srv:    IN::SRV,
+          wks:    IN::WKS,
+          minfo:  IN::MINFO,
+          mx:     IN::MX,
+          ns:     IN::NS,
+          ptr:    IN::PTR,
+          soa:    IN::SOA,
+          txt:    IN::TXT,
+          cname:  IN::CNAME
+        }[pattern.to_sym] || IN::A
+      end
 
       def run_dns_server
         logger.level = Logger::INFO

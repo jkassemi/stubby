@@ -4,12 +4,13 @@ require 'httpi'
 
 module Stubby
   class RegistryItem
-    attr_accessor :name, :version, :source
+    attr_accessor :name, :version, :source, :location
 
     def initialize(name, version, source)
       @name = name
       @version = version
       @source = source
+      @location = "~/.stubby/#{name}"
     end
 
     def version
@@ -20,16 +21,11 @@ module Stubby
       # TODO: this should fail gracefully - right now it dies
       # unzipping a non-existent file if the zip doesn't exist, for instance
       puts "source: #{source} - name: #{name}"
-      if File.exists? source
-        uninstall
-        `ln -s #{source} ~/.stubby/#{name}`
-      else
-        `mkdir -p ~/.stubby`
-        download source, "~/.stubby/#{name}.zip"
-        `curl #{source} > ~/.stubby/#{name}.zip`
-        `unzip ~/.stubby/#{name}.zip`
-        `rm ~/.stubby/#{name}.zip`
-      end
+      
+      `mkdir -p ~/.stubby`
+      download source, "~/.stubby/#{name}.zip"
+      `curl #{source} > ~/.stubby/#{name}.zip`
+      `unzip -d ~/.stubby/ #{source}`
     end
 
     def uninstall
@@ -72,7 +68,10 @@ module Stubby
       versions(name).first
     end
 
-    def install(name, v=nil)
+    def install(name, opts={})
+      source = opts[:source]
+      v = opts[:version]
+
       if name =~ /https?:\/\//
         source = name
         name = File.basename(name).split(".").first
@@ -82,6 +81,8 @@ module Stubby
 
         if stub
           stub.install
+        elsif source
+          add_new_source(name, source, v)
         else
           puts "[ERROR] Cannot find #{name} at #{v}"
         end
@@ -99,14 +100,33 @@ module Stubby
       latest(name).uninstall
     end
 
+
     private
+
     def remote_index
       response = HTTPI.get("http://github.com/jkassemi/stubby/index.json")
       Oj.load(response.body) if response.code == 200
     end
 
     def local_index
-      Oj.load(File.read(File.join(File.dirname(__FILE__), "../../index.json")))
+      Oj.load(File.read(File.expand_path(File.join('~', '.stubby', "index.json")))) || {}
+    end
+
+    def write_local_index(&block)
+      File.open File.expand_path(File.join('~', '.stubby', "index.json")), "w", &block
+    end
+
+    def add_new_source(name, source, v=nil)
+      version = v.nil? ? 'v0.0.1' : v
+
+      item = RegistryItem.new name, version, source
+      item.install
+
+      current_index = local_index
+
+      write_local_index do |index|
+        index.puts Oj.dump(local_index.merge({item.name => {item.version => item.location}}))
+      end
     end
   end
 end
