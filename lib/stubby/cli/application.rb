@@ -15,7 +15,7 @@ module Stubby
       def agent
         if permissions? 
           puts "Stubby agent started! CTRL-C to revert system to normal..."
-          session.run!
+          current_session.run!
         else
           puts "[ERROR] Stubby needs _MORE POWER_ - give it sudo..."
         end
@@ -51,17 +51,17 @@ module Stubby
       LONGDESC
       def status(name=nil)
         if name.nil?
-          if session.system.stubs.empty?
+          if current_session.system.stubs.empty?
             puts "[INFO] No stubs"
           else
-            session.system.stubs.each do |k, v|
+            current_session.system.stubs.each do |k, v|
               status(k) unless k.nil?
             end
           end
         else
-          mode = session.system.stubs[name].target
+          mode = current_session.system.stubs[name].target
 
-          modes = session.system.stubs[name].modes.collect { |key, options|
+          modes = current_session.system.stubs[name].modes.collect { |key, options|
             key == mode ? "*#{key}" : key
           }
 
@@ -89,16 +89,16 @@ module Stubby
 
       LONGDESC
       def mode(name, mode=nil)
-        session.system.target(name, mode)
+        current_session.system.target(name, mode)
         status(name)
       end 
 
       desc "search", "Search for a stub"
       def search(name=nil)
         if name.nil?
-          puts session.registry.index.inspect
+          puts current_session.registry.index.inspect
         else 
-          puts session.registry.latest(name).inspect
+          puts current_session.registry.latest(name).inspect
         end
       end
 
@@ -122,7 +122,7 @@ module Stubby
         > $ stubby install ./stubby.json
       LONGDESC
       def install(name)
-        session.registry.install(name, options)
+        current_session.registry.install(name, options)
       end
 
       desc "update", "Remove stub and then install stub"
@@ -133,13 +133,15 @@ module Stubby
 
       desc "uninstall", "Remove a stub"
       def uninstall(name)
-        session.registry.uninstall(name)
+        current_session.registry.uninstall(name)
       end
 
+      register(CLI::Session, 'session', 'session <command>', 'manages saved sessions')
+
       private
-      def session
+      def current_session
         # TODO: allow configuration of this
-        @session ||= Session.new("172.16.123.1").tap do |session|
+        @session ||= Stubby::Session.new("172.16.123.1").tap do |session|
           session.extensions << Extensions::DNS::Server.new
           session.extensions << Extensions::HTTP::Server.new
           session.extensions << Extensions::Reload.new
@@ -150,5 +152,6 @@ module Stubby
         `whoami`.strip == "root"
       end
     end
+
   end
 end
