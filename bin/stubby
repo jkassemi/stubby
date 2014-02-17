@@ -3,6 +3,6 @@
 $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 
 require 'stubby'
-require 'stubby/cli/application'
+require 'stubby/cli'
 
 Stubby::CLI::Application.start(ARGV)
