@@ -20,7 +20,38 @@ Install the stubby gem:
 
 		> $ sudo gem install stubby
 
-## Agent
+## Local Agent
+
+The local agent uses the Stubfile.json file in the working directory, installing
+and loading all defined stubs. Use the Stubfile.json file to declare your
+environments and their dependencies:
+
+                > $ cd ~/Documents/project && cat Stubfile.json
+                > {
+                >   "development": {
+                >     "facebook": "test",
+                >     "github": "test"
+                >   },
+                > 
+                >   "staging": {
+                >     "facebook": "test",
+                >     "github": "test"
+                >   }
+                > }
+
+The 'development' and 'staging' modes for this project both require facebook 
+in test mode and github in test mode. By running
+
+                > $ sudo stubby local development
+                > Installing facebook stub...
+                > Installing github stub...
+                > CTRL-C to exit Stubby
+
+Stubby is running a DNS and HTTP server on your local system that will
+appropriately forward all traffic to the facebook and github test environments.
+Just hit CTRL-C to revert your system to normal.
+
+## System Agent
 
 Start the stubby agent. This launches a DNS server and HTTP server on your
 local system. All DNS requests are routed through the Stubby DNS server. If
