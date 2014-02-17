@@ -11,3 +11,4 @@ tmp
 *DS_Store
 *.un~
 Gemfile.lock
+.test
