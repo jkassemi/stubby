@@ -18,14 +18,16 @@ module Stubby
     end
 
     def install
-      # TODO: this should fail gracefully - right now it dies
-      # unzipping a non-existent file if the zip doesn't exist, for instance
-      puts "source: #{source} - name: #{name}"
-      
-      `mkdir -p ~/.stubby`
-      download source, "~/.stubby/#{name}.zip"
-      `curl #{source} > ~/.stubby/#{name}.zip`
-      `unzip -d ~/.stubby/ #{source}`
+      if File.exists? source
+        uninstall
+        `ln -s #{source} ~/.stubby/#{name}`
+      else
+        `mkdir -p ~/.stubby`
+        download source, "~/.stubby/#{name}.zip"
+        `curl #{source} > ~/.stubby/#{name}.zip`
+        `unzip -d ~/.stubby/ #{source}`
+        `rm ~/.stubby/#{name}.zip`
+      end
     end
 
     def uninstall
@@ -109,7 +111,9 @@ module Stubby
     end
 
     def local_index
-      Oj.load(File.read(File.expand_path(File.join('~', '.stubby', "index.json")))) || {}
+      Oj.load(File.read(File.expand_path(File.join('~', '.stubby', "index.json"))))
+    rescue 
+      {}
     end
 
     def write_local_index(&block)

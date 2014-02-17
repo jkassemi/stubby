@@ -23,6 +23,7 @@ module Extensions
       end
 
       def process(name, resource_class, transaction)
+          puts name
     		instruction = @session.search(name)
 
     		if instruction.nil? or instruction == "@"

@@ -29,13 +29,13 @@ module Stubby
       if mode.nil? 
         untarget(name)
       else
-        @stubs[name].target = mode
+        stubs[name].target = mode
         dump
       end
     end
 
     def untarget(name)
-      @stubs[name].target = nil
+      stubs[name].target = nil
       dump
     end
 
@@ -99,7 +99,7 @@ module Stubby
       is = installed_stubs
 
       if File.exists?(session_config_path)
-        Hash[Oj.load(File.read(path)).collect { |k, v|
+        Hash[Oj.load(File.read(session_config_path)).collect { |k, v|
           is[k].target = v
           [k, is[k]]
         }]

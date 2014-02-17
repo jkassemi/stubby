@@ -42,6 +42,12 @@ module Extensions
         redirect to(url.to_s)
       end
 
+      adapter "https-redirect" do
+        url.scheme = "https"
+        url.path = request.path if url.path.to_s.empty?
+        redirect to(url.to_s)
+      end
+
       adapter "file" do
         paths = []
 

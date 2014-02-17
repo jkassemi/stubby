@@ -1,0 +1,9 @@
+{
+  "test": {
+    "example": "staging"
+  },
+
+  "production": {
+    "example": ""    
+  }
+}
