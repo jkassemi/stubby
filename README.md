@@ -22,7 +22,7 @@ Install the stubby gem:
 
 		> $ sudo gem install stubby
 
-## Local Agent
+## Local Agent (Standard)
 
                 > $ sudo stubby local development
                 > Installing facebook stub...
@@ -58,7 +58,7 @@ environments and their dependencies:
                 >   "staging": { ... }
                 > }
 
-## System Agent
+## System Agent (Global)
 
 Start the stubby agent. This launches a DNS server and HTTP server on your
 local system. All DNS requests are routed through the Stubby DNS server. If
@@ -156,6 +156,9 @@ address.
  		
 Issues a request handled by the stubby web server, which proxies the request to 172.16.123.1.
 
+## Contributing a Stub
+
+Fork this repository, update the index.json file, and submit a pull request.
 
 ### DNS Only
 
