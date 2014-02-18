@@ -21,7 +21,7 @@ module Stubby
     end
 
     def dump
-      @fs_helper.write_json @path_helper.session_config_path(session_name), stubs.inject({}) { |session, k, v| session[k] = v.target; session }
+      @fs_helper.write_json @path_helper.session_config_path(session_name), (stubs.inject({}) { |session, k| session[k[0]] = k[1].target; session })
     end
 
     def stubs
