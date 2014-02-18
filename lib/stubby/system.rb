@@ -86,6 +86,8 @@ module Stubby
     end
 
     private
+    # Stubs that were installed into the base ~/.stubby directory.
+    # These are not necessarily active.
     def installed_stubs
       # TODO: clean me
       Hash[Dir[root_path + "/**"].collect { |path|
@@ -94,6 +96,7 @@ module Stubby
       }.compact]
     end
 
+    # Stubs that are actually currently loaded
     def loaded_stubs
       # TODO: clean me
       is = installed_stubs

@@ -111,7 +111,7 @@ module Stubby
 
         # Install stubs we don't have
         # TODO: versioning syntax?
-        settings.each do |stub, mode|
+        (settings["dependencies"] || []).each do |stub, mode|
           install(stub)
         end
 
@@ -125,11 +125,14 @@ module Stubby
         current_session.system.session_remove('_local')
         current_session.system.session_name = '_local'
 
-        settings.each do |stub, mode|
+        (settings["dependencies"] || []).each do |stub, mode|
           mode(stub, mode)
         end
 
-        current_session.run!
+        settings.delete "dependencies"
+        current_session.system.stubs["local"] = LocalStub.new(settings)
+
+        current_session.run!(:reload => false)
       ensure
         current_session.system.session_name = old
       end

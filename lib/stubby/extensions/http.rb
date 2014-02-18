@@ -150,7 +150,9 @@ module Extensions
         @log = Logger.new(STDOUT)
       end
 
-      def run!(session)
+      def run!(session, options)
+        return if options[:http] == false
+
         @session = session
         HTTPApp.run!(session)
       end
@@ -160,6 +162,10 @@ module Extensions
     end
 
     class SSLServer < Server
+      def run!(session, options)
+        return if options[:https] == false
+        super
+      end
     end
   end
 end

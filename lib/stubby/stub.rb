@@ -2,7 +2,7 @@ require 'pry'
 
 module Stubby
   class Stub
-    attr_accessor :target, :path
+    attr_accessor :target, :path, :modes
 
     # TODO: target is mode, rename
     def initialize(path, target=nil)
@@ -38,5 +38,19 @@ module Stubby
 
       return nil
     end
+  end
+
+  class LocalStub < Stub
+    def initialize(options)
+      @options = options
+    end
+
+    def modes 
+      {}
+    end
+
+    def options
+      @options
+    end 
   end
 end

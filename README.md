@@ -4,7 +4,9 @@ A local DNS and HTTP server combo that provides a package manager
 solution to configuring network systems on a development machine. This
 is currently only designed to run on OS X.
 
-It's designed to allow you to:
+Use it to:
+
+* manage your dev domains (like pow, with lethal power)
 
 * distribute a spec for your API so developers can run basic tests without
 hitting your dev server.
@@ -22,6 +24,22 @@ Install the stubby gem:
 
 ## Local Agent
 
+                > $ sudo stubby local development
+                > Installing facebook stub...
+                > Installing github stub...
+                > CTRL-C to exit Stubby
+
+The 'development' and 'staging' modes for this project both require facebook 
+in test mode and github in test mode. Our project lives at http://example.com
+in production - but we develop on localhost:3000. Don't worry, stubby!
+
+Stubby is running a DNS and HTTP server on your local system that will
+appropriately send facebook and github api requests to a local stub, and will
+forward all requests to http(s)://example.com to http://localhost:3000 -
+perfect for app development.
+
+Just hit CTRL-C to revert your system to normal.
+
 The local agent uses the Stubfile.json file in the working directory, installing
 and loading all defined stubs. Use the Stubfile.json file to declare your
 environments and their dependencies:
@@ -29,27 +47,16 @@ environments and their dependencies:
                 > $ cd ~/Documents/project && cat Stubfile.json
                 > {
                 >   "development": {
-                >     "facebook": "test",
-                >     "github": "test"
+                >     "dependencies": {
+                >       "facebook": "test",
+                >       "github": "test"
+                >     },
+                >
+                >     "(https?:\/\/)?example.com": "http://localhost:3000"
                 >   },
                 > 
-                >   "staging": {
-                >     "facebook": "test",
-                >     "github": "test"
-                >   }
+                >   "staging": { ... }
                 > }
-
-The 'development' and 'staging' modes for this project both require facebook 
-in test mode and github in test mode. By running
-
-                > $ sudo stubby local development
-                > Installing facebook stub...
-                > Installing github stub...
-                > CTRL-C to exit Stubby
-
-Stubby is running a DNS and HTTP server on your local system that will
-appropriately forward all traffic to the facebook and github test environments.
-Just hit CTRL-C to revert your system to normal.
 
 ## System Agent
 

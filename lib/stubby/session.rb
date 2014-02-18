@@ -10,10 +10,10 @@ module Stubby
       @extensions = []
     end
 
-    def run!
+    def run!(options={})
       begin
         assume_network_interface
-        run_extensions
+        run_extensions(options)
       ensure
         unassume_network_interface
       end
@@ -50,12 +50,12 @@ module Stubby
       )
     end
 
-    def run_extensions
+    def run_extensions(options)
       Thread.abort_on_exception = true
 
       @running = @extensions.collect { |plugin|
         Thread.new { 
-          plugin.run!(self) 
+          plugin.run!(self, options)
         }
       }
 

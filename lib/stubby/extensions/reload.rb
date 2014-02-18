@@ -2,13 +2,18 @@ require 'listen'
 
 module Extensions
   class Reload
-    def run!(session)
+    def run!(session, options)
+      @options = options
       @session = session
+      return if @options[:reload] == false
+
       listener.start
       sleep 1 while @listener
     end
 
     def stop!
+      return if @options[:reload] == false
+
       listener.stop
     end
 

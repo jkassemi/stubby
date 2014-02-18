@@ -1,9 +1,17 @@
 {
   "test": {
-    "example": "staging"
+    "dependencies": {
+      "example": "staging"
+    },
+
+    "(https?:\/\/)?example.com": "http://localhost:3000"
   },
 
-  "production": {
-    "example": ""    
+  "staging": {
+    "dependencies": {
+      "example": "staging"
+    },
+    
+    "example.com": "dns-cname://aws..."
   }
 }
