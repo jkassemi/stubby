@@ -36,13 +36,13 @@ module Stubby
       if mode.nil? 
         untarget(name)
       else
-        @stubs[name].target = mode
+        stubs[name].target = mode
         dump
       end
     end
 
     def untarget(name)
-      @stubs[name].target = nil
+      stubs[name].target = nil
       dump
     end
 

@@ -4,7 +4,9 @@ A local DNS and HTTP server combo that provides a package manager
 solution to configuring network systems on a development machine. This
 is currently only designed to run on OS X.
 
-It's designed to allow you to:
+Use it to:
+
+* manage your dev domains (like pow, with lethal power)
 
 * distribute a spec for your API so developers can run basic tests without
 hitting your dev server.
@@ -20,7 +22,43 @@ Install the stubby gem:
 
 		> $ sudo gem install stubby
 
-## Agent
+## Local Agent (Standard)
+
+                > $ sudo stubby local development
+                > Installing facebook stub...
+                > Installing github stub...
+                > CTRL-C to exit Stubby
+
+The 'development' and 'staging' modes for this project both require facebook 
+in test mode and github in test mode. Our project lives at http://example.com
+in production - but we develop on localhost:3000. Don't worry, stubby!
+
+Stubby is running a DNS and HTTP server on your local system that will
+appropriately send facebook and github api requests to a local stub, and will
+forward all requests to http(s)://example.com to http://localhost:3000 -
+perfect for app development.
+
+Just hit CTRL-C to revert your system to normal.
+
+The local agent uses the Stubfile.json file in the working directory, installing
+and loading all defined stubs. Use the Stubfile.json file to declare your
+environments and their dependencies:
+
+                > $ cd ~/Documents/project && cat Stubfile.json
+                > {
+                >   "development": {
+                >     "dependencies": {
+                >       "facebook": "test",
+                >       "github": "test"
+                >     },
+                >
+                >     "(https?:\/\/)?example.com": "http://localhost:3000"
+                >   },
+                > 
+                >   "staging": { ... }
+                > }
+
+## System Agent (Global)
 
 Start the stubby agent. This launches a DNS server and HTTP server on your
 local system. All DNS requests are routed through the Stubby DNS server. If
@@ -28,7 +66,11 @@ no installed stub matches a request, it's passed upstream (Google's public DNS).
 
 		> $ sudo stubby agent
 
-There's some interface work to be done on stopping the agent - CTRL-C is unreliable at the moment. Additionally, it'd be nice to launchctl the stubby agent so that we don't start it from scratch. Homebrew recipe would be nice, too. 
+There's some interface work to be done on stopping the agent -
+ CTRL-C is unreliable at the moment. Additionally, it'd be nice to launchctl 
+the stubby agent so that we don't start it from scratch. 
+Homebrew recipe would be nice, too. But, it seems to make more sense to just
+maintain the local agent with the Stubfile.json support... Feedback desired.
 
 ## Stubs
 
@@ -118,6 +160,11 @@ address.
  		
 Issues a request handled by the stubby web server, which proxies the request to 172.16.123.1.
 
+## Contributing a Stub
+
+Fork this repository, update the index.json file, and submit a pull request. For
+this major version, the remote registry will just be the index.json file from
+this project's github.
 
 ### DNS Only
 
@@ -164,3 +211,13 @@ Given a rule:
 		"(https?:\/\/)?yahoo.com": "http-redirect://duckduckgo.com"
 		
 DNS will resolve to the stubby server, and the web request to http://yahoo.com will redirect to http://duckduckgo.com.
+
+### Vision
+
+* protocol in instruction becomes a plugin system. dns-cname:, for instance,
+  could be handled by the dns plugin. If it didn't exist when Stubfile.json was
+  being installed, it would be installed. 
+* proxy traffic on ports and send to log systems:
+  ":25": "log-smtp://"
+  ":3306": "log-mysql://"
+* web app front-end: show emails sent, mysql queries made, etc.

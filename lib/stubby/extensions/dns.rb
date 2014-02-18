@@ -61,7 +61,9 @@ module Extensions
     			:ttl => 0)
       end
 
-      def run!(session)
+      def run!(session, options)
+        return if options[:dns] == false
+
         @session = session
         setup_references and run_dns_server
       end

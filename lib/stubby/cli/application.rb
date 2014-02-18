@@ -93,6 +93,50 @@ module Stubby
         status(name)
       end 
 
+      desc "local", "Run a local agent based on the Stubfile.json configuration"
+      def local(global_mode)
+        unless File.exists?("Stubfile.json")
+          puts "[ERROR]: Stubfile.json not found!"
+          return
+        end
+
+        environments = Oj.load(File.read("Stubfile.json"))
+
+        settings = environments[global_mode]
+
+        if settings.nil?
+          puts "[ERROR]: No #{global_mode} found. Try #{environments.keys.sort.inspect}"
+          return
+        end
+
+        # Install stubs we don't have
+        # TODO: versioning syntax?
+        (settings["dependencies"] || []).each do |stub, mode|
+          install(stub)
+        end
+
+        old = current_session.system.session_name
+
+        if old == "_local"
+          puts "[ERROR]: Already running a local session?"
+          return
+        end
+
+        current_session.system.session_remove('_local')
+        current_session.system.session_name = '_local'
+
+        (settings["dependencies"] || []).each do |stub, mode|
+          mode(stub, mode)
+        end
+
+        settings.delete "dependencies"
+        current_session.system.stubs["local"] = LocalStub.new(settings)
+
+        current_session.run!(:reload => false)
+      ensure
+        current_session.system.session_name = old
+      end
+
       desc "search", "Search for a stub"
       def search(name=nil)
         if name.nil?
@@ -121,8 +165,8 @@ module Stubby
         # TODO:
         > $ stubby install ./stubby.json
       LONGDESC
-      def install(name)
-        current_session.registry.install(name, options)
+      def install(name, override=nil)
+        current_session.registry.install(name, override || options)
       end
 
       desc "update", "Remove stub and then install stub"

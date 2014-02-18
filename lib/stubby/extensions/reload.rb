@@ -2,27 +2,36 @@ require 'listen'
 
 module Extensions
   class Reload
-    def run!(session)
+    def run!(session, options)
+      @options = options
       @session = session
+      return if @options[:reload] == false
+
       listener.start
       sleep 1 while @listener
     end
 
     def stop!
-      listener.stop rescue nil
-      @listener = nil
+      return if @options[:reload] == false
+
+      listener.stop
     end
 
     private
-    def path
-      @session.system.path
+    def root_path
+      @session.system.root_path
+    end
+
+    def session_config_path
+      @session.system.session_config_path
     end
 
     def listener
-      @listener ||= Listen.to(File.dirname(path)) do |modified, added, removed|
+      @listener ||= Listen.to(root_path) do |modified, added, removed|
         (modified + added).each do |mpath|
-          if File.identical?(path, mpath)
-            puts "[INFO] Detected config change, reloading #{path}..."
+          puts "[INFO] Detected change, test identical #{mpath}"
+          if File.identical?(session_config_path, mpath)
+            puts "[INFO] Detected config change, reloading #{mpath}..."
             @session.system.reload
           end
         end

@@ -42,6 +42,12 @@ module Extensions
         redirect to(url.to_s)
       end
 
+      adapter "https-redirect" do
+        url.scheme = "https"
+        url.path = request.path if url.path.to_s.empty?
+        redirect to(url.to_s)
+      end
+
       adapter "file" do
         paths = []
 
@@ -144,7 +150,9 @@ module Extensions
         @log = Logger.new(STDOUT)
       end
 
-      def run!(session)
+      def run!(session, options)
+        return if options[:http] == false
+
         @session = session
         HTTPApp.run!(session)
       end
@@ -154,6 +162,10 @@ module Extensions
     end
 
     class SSLServer < Server
+      def run!(session, options)
+        return if options[:https] == false
+        super
+      end
     end
   end
 end
