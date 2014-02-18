@@ -66,7 +66,11 @@ no installed stub matches a request, it's passed upstream (Google's public DNS).
 
 		> $ sudo stubby agent
 
-There's some interface work to be done on stopping the agent - CTRL-C is unreliable at the moment. Additionally, it'd be nice to launchctl the stubby agent so that we don't start it from scratch. Homebrew recipe would be nice, too. 
+There's some interface work to be done on stopping the agent -
+ CTRL-C is unreliable at the moment. Additionally, it'd be nice to launchctl 
+the stubby agent so that we don't start it from scratch. 
+Homebrew recipe would be nice, too. But, it seems to make more sense to just
+maintain the local agent with the Stubfile.json support... Feedback desired.
 
 ## Stubs
 
