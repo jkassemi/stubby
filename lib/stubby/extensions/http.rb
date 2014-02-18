@@ -17,11 +17,15 @@ module Extensions
           80
         end
 
-        def run!(session)
+        def run!(session, server_settings={})
+          puts self.inspect + ": " + port.to_s
+          
           set :bind, session.host
           set :port, port
           set :stubby_session, session
-          super()
+          set :server, 'webrick'
+
+          super(:server_settings => server_settings)
         end
 
         def adapter(name, &block)
@@ -142,6 +146,17 @@ module Extensions
         def port
           443
         end
+
+        def run!(session)
+          set :bind, session.host
+          set :port, port
+          set :stubby_session, session
+
+          super(session, {
+            :SSLEnable => true,
+            :SSLCertName => %w[CN localhost]
+          })
+        end
       end
     end
 
@@ -158,13 +173,20 @@ module Extensions
       end
 
       def stop!
+        HTTPApp.quit!
       end
     end
 
     class SSLServer < Server
       def run!(session, options)
         return if options[:https] == false
-        super
+
+        @session = session
+        HTTPSApp.run!(session)
+      end
+
+      def stop!
+        HTTPSApp.quit!
       end
     end
   end

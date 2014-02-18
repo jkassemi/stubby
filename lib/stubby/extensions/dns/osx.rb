@@ -4,6 +4,7 @@ module Extensions
     module OSX
       private
         def setup_references
+          return
           # TODO: if we connect to a new network, we'd like that to use us, too
           @network_interfaces = {}
           `networksetup listallnetworkservices`.split("\n").each do |interface|
@@ -16,6 +17,7 @@ module Extensions
         end
 
         def teardown_references
+          return
           @network_interfaces.each do |interface, servers| 
             `networksetup -setdnsservers '#{interface}' #{servers.join(" ")}`
           end

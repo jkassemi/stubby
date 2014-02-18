@@ -186,9 +186,10 @@ module Stubby
       def current_session
         # TODO: allow configuration of this
         @session ||= Stubby::Session.new("172.16.123.1").tap do |session|
+          session.extensions << Extensions::Reload.new
           session.extensions << Extensions::DNS::Server.new
           session.extensions << Extensions::HTTP::Server.new
-          session.extensions << Extensions::Reload.new
+          session.extensions << Extensions::HTTP::SSLServer.new
         end
       end
 

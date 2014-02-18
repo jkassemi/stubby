@@ -9,12 +9,13 @@ module Extensions
 
       listener.start
       sleep 1 while @listener
+      puts 'run! done'
     end
 
     def stop!
       return if @options[:reload] == false
-
-      listener.stop
+      @listener.stop and @listener = nil if @listener
+      puts 'stop! done'
     end
 
     private
@@ -27,7 +28,11 @@ module Extensions
     end
 
     def listener
-      @listener ||= Listen.to(root_path) do |modified, added, removed|
+      return @listener if @listener
+
+      puts "NEW LISTENER"
+
+      @listener ||= Listen.to(root_path, debug: true) do |modified, added, removed|
         (modified + added).each do |mpath|
           puts "[INFO] Detected change, test identical #{mpath}"
           if File.identical?(session_config_path, mpath)

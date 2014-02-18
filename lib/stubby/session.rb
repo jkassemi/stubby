@@ -1,6 +1,19 @@
 require 'oj'
 require 'stubby/system'
 
+require("fiddle")
+
+def set_process_name(name)
+    RUBY_PLATFORM.index("linux") or return
+    Fiddle::Function.new(
+        DL::Handle["prctl"], [
+            Fiddle::TYPE_INT, Fiddle::TYPE_VOIDP,
+            Fiddle::TYPE_LONG, Fiddle::TYPE_LONG,
+            Fiddle::TYPE_LONG
+        ], Fiddle::TYPE_INT
+    ).call(15, name, 0, 0, 0)
+end
+
 module Stubby
   class Session
     attr_accessor :extensions, :host
@@ -42,32 +55,36 @@ module Stubby
     end
 
     private
-    def stop_extensions
-      @extensions_stopped ||= (
-        @extensions.each do |plugin|
-          plugin.stop!
-        end
-      )
+    def stop_extensions(signal)
+      puts "Shutting down..."
+
+      @running.each do |process|
+        Process.kill(signal, process)
+      end
+
+      puts "Bye."
     end
 
     def run_extensions(options)
-      Thread.abort_on_exception = true
-
       @running = @extensions.collect { |plugin|
-        Thread.new { 
+        Process.fork do
+          $0 = "stubby: #{plugin.class.name}"
           plugin.run!(self, options)
-        }
+        end
       }
 
       Thread.new {
-        sleep 3
+        sleep 2
         puts "CTRL-C to exit stubby"
-        trap("INT") { stop_extensions }
       }
 
-      @running.map(&:join)
-    ensure
-      stop_extensions
+      trap("INT") { 
+        stop_extensions("QUIT") and exit 
+      }
+      
+      @running.each do |process|
+        Process.waitpid(process)
+      end
     end
 
     def assume_network_interface
