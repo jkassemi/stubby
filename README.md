@@ -202,3 +202,13 @@ Given a rule:
 		"(https?:\/\/)?yahoo.com": "http-redirect://duckduckgo.com"
 		
 DNS will resolve to the stubby server, and the web request to http://yahoo.com will redirect to http://duckduckgo.com.
+
+### Vision
+
+* protocol in instruction becomes a plugin system. dns-cname:, for instance,
+  could be handled by the dns plugin. If it didn't exist when Stubfile.json was
+  being installed, it would be installed. 
+* proxy traffic on ports and send to log systems:
+  ":25": "log-smtp://"
+  ":3306": "log-mysql://"
+* web app front-end: show emails sent, mysql queries made, etc.
