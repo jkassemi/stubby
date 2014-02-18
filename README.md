@@ -158,7 +158,9 @@ Issues a request handled by the stubby web server, which proxies the request to 
 
 ## Contributing a Stub
 
-Fork this repository, update the index.json file, and submit a pull request.
+Fork this repository, update the index.json file, and submit a pull request. For
+this major version, the remote registry will just be the index.json file from
+this project's github.
 
 ### DNS Only
 
