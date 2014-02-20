@@ -7,12 +7,6 @@ describe Stubby::System do
     end
   }
 
-  before {
-    if File.exists?(root_path)
-      FileUtils.rm_r(root_path)
-    end
-  }
-
   let(:root_path){ File.expand_path(".test") }
   let(:session_root_path) { "#{root_path}/sessions" }
   let(:default_session_config_path) { "#{session_root_path}/default.json" } 
@@ -21,36 +15,6 @@ describe Stubby::System do
   describe "#root_path" do
     it "'s ~/.stubby expanded" do
       expect(subject.root_path).to eq(root_path)
-    end
-  end
-
-  describe "#session_root_path" do
-    it "creates it when it doesn't exist" do
-      allow(File).to receive(:exists?).with(anything()).and_call_original
-      expect(File).to receive(:exists?).with(session_root_path).and_return(false)
-      expect(FileUtils).to receive(:mkdir_p).and_return(true)
-      subject.session_root_path
-    end
-
-    it "returns a reference to it" do
-      expect(subject.session_root_path).to eq(session_root_path)
-    end
-  end
-
-  describe "#session_config_path" do
-    it "returns session config path" do
-      expect(subject.session_config_path).to eq(default_session_config_path)
-    end
-
-    it "uses the session name" do
-      subject.session_name = "example"
-      expect(subject.session_config_path).to include("example")
-    end      
-  end
-
-  describe "#session_name_path" do
-    it "returns session name path" do
-      expect(subject.session_name_path).to eq(default_session_name_path)
     end
   end
 
