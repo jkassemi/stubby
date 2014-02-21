@@ -23,7 +23,12 @@ module Extensions
       end
 
       def process(name, resource_class, transaction)
-    		instruction = @session.search(name)
+          transaction.passthrough!(UPSTREAM)
+          return
+
+          puts "#{STUBBY_MASTER}:9000"
+          instruction = Oj.load(HTTPI.post("http://#{STUBBY_MASTER}:9000/rules/search", 
+            trigger: name))
 
     		if instruction.nil? or instruction == "@"
     			transaction.passthrough!(UPSTREAM)
@@ -35,13 +40,13 @@ module Extensions
     		if url.scheme.to_s.empty?
     			url = URI.parse("dns-a://" + instruction)
     		elsif (url.scheme.to_s =~ /^dns-.*/).nil?
-    			url.host = @session.host 
+    			url.host = STUBBY_MASTER
     		end
 
     		response_resource_class = resource url.scheme.gsub('dns-', '')
 
     		if url.host.to_s.empty?
-    			url.host = @session.host
+    			url.host = STUBBY_MASTER
     		end
 
     		if !IPAddress.valid?(url.host) and response_resource_class == IN::A
@@ -63,6 +68,7 @@ module Extensions
 
       def run!(session, options)
         return if options[:dns] == false
+        trap("INT"){ stop!  }
 
         @session = session
         setup_references and run_dns_server
@@ -97,8 +103,8 @@ module Extensions
         logger.level = Logger::INFO
 
         EventMachine.run do
-          run(:listen => [[:tcp, @session.host, 53],
-            [:udp, @session.host, 53]])
+          run(:listen => [[:tcp, STUBBY_MASTER, 53],
+            [:udp, STUBBY_MASTER, 53]])
         end
       end
 

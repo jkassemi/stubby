@@ -1,19 +1,6 @@
 require 'oj'
 require 'stubby/system'
 
-require("fiddle")
-
-def set_process_name(name)
-    RUBY_PLATFORM.index("linux") or return
-    Fiddle::Function.new(
-        DL::Handle["prctl"], [
-            Fiddle::TYPE_INT, Fiddle::TYPE_VOIDP,
-            Fiddle::TYPE_LONG, Fiddle::TYPE_LONG,
-            Fiddle::TYPE_LONG
-        ], Fiddle::TYPE_INT
-    ).call(15, name, 0, 0, 0)
-end
-
 module Stubby
   class Session
     attr_accessor :extensions, :host
@@ -30,28 +17,6 @@ module Stubby
       ensure
         unassume_network_interface
       end
-    end
-
-    def target(name, target=nil)
-      system.target(name, target)
-    end
-
-    def search(trigger)
-      system.stubs.each do |name, stub|
-        # TODO: In parallel, this'll get slow
-        res = stub.search(trigger)
-        return res if res
-      end
-
-      nil
-    end
-
-    def registry
-      @registry ||= Stubby::Registry.new
-    end
-
-    def system
-      @system ||= Stubby::System.new
     end
 
     private

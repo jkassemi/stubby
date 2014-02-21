@@ -34,8 +34,21 @@ module Stubby
       `rm -rf ~/.stubby/#{name}`
     end
 
+    def installed?
+      File.exists? @location
+    end
+
     def download(source, destination)
       `curl #{source} #{destination}` 
+    end
+
+    def config
+      File.join("~", ".stubby", name)
+    end
+
+    def stub(target=nil)
+      install unless installed?
+      Stub.new(config, target)
     end
   end
 

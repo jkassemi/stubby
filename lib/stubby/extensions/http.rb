@@ -20,7 +20,7 @@ module Extensions
         def run!(session, server_settings={})
           puts self.inspect + ": " + port.to_s
           
-          set :bind, session.host
+          set :bind, STUBBY_MASTER
           set :port, port
           set :stubby_session, session
           set :server, 'webrick'
@@ -130,7 +130,8 @@ module Extensions
       end
 
       def instruction
-        @instruction ||= settings.stubby_session.search("http://#{request.host}")
+        Oj.load(HTTPI.post("http://#{STUBBY_MASTER}:9000/rules/search", 
+          trigger: "http://#{request.host}"))
       end
 
       def url
@@ -148,7 +149,7 @@ module Extensions
         end
 
         def run!(session)
-          set :bind, session.host
+          set :bind, STUBBY_MASTER
           set :port, port
           set :stubby_session, session
 
