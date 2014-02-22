@@ -1,3 +1,5 @@
+require 'sinatra/json'
+
 module Stubby
   class Api < Sinatra::Base
     class << self
@@ -15,7 +17,7 @@ module Stubby
       def activate(name, mode)
         registry_item = registry.latest(name)
         registry_item.install
-        registry_item.stub(mode)
+        self.enabled_stubs[name] = registry_item.stub(mode)
       end
 
       def activate_transient(options)
@@ -57,9 +59,9 @@ module Stubby
     end
 
     post "/rules/search.json" do
-      json Api.enabled_stubs.detect { |_,stub|
-        stub.search(params[:trigger])  
-      }
+      json Api.enabled_stubs.collect { |_, stub|
+        stub.search(params[:trigger])
+      }.compact.first
     end
   end
 

@@ -23,7 +23,7 @@ module Extensions
           set :bind, STUBBY_MASTER
           set :port, port
           set :stubby_session, session
-          set :server, 'webrick'
+          set :server, 'thin'
 
           super(:server_settings => server_settings)
         end
@@ -130,8 +130,8 @@ module Extensions
       end
 
       def instruction
-        Oj.load(HTTPI.post("http://#{STUBBY_MASTER}:9000/rules/search", 
-          trigger: "http://#{request.host}"))
+        Oj.load(HTTPI.post("http://#{STUBBY_MASTER}:9000/rules/search.json", 
+          trigger: "http://#{request.host}").body)
       end
 
       def url

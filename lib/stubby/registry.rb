@@ -43,7 +43,7 @@ module Stubby
     end
 
     def config
-      File.join("~", ".stubby", name)
+      File.join("~", ".stubby", name, "stubby.json")
     end
 
     def stub(target=nil)

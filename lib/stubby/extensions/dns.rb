@@ -23,12 +23,9 @@ module Extensions
       end
 
       def process(name, resource_class, transaction)
-          transaction.passthrough!(UPSTREAM)
-          return
+          body = HTTPI.post("http://#{STUBBY_MASTER}:9000/rules/search.json", trigger: name).body
 
-          puts "#{STUBBY_MASTER}:9000"
-          instruction = Oj.load(HTTPI.post("http://#{STUBBY_MASTER}:9000/rules/search", 
-            trigger: name))
+          instruction = Oj.load(body)
 
     		if instruction.nil? or instruction == "@"
     			transaction.passthrough!(UPSTREAM)
