@@ -126,7 +126,7 @@ module Stubby
         >          "example":"staging"
         >        },
         >        "(https?://)?example.com":"http://localhost:3000"
-        >      }
+        >     }
         >    },
         >    "environment":"test"
         >  }
