@@ -4,7 +4,7 @@ gemspec
 
 gem 'rubydns'
 gem 'liquid'
-gem 'oj'
+gem 'multi_json'
 gem 'sinatra'
 gem 'sinatra-contrib'
 gem 'rack-ssl'

@@ -8,11 +8,12 @@ module Stubby
       :root_path
 
     def initialize
+      raise 'here'
       stubs
     end
 
     def dump
-      File.write(session_config_path, Oj.dump(Hash[@stubs.collect { |k,v|
+      File.write(session_config_path, MultiJson.dump(Hash[@stubs.collect { |k,v|
         [k, v.target] 
       }]))
     end
@@ -102,7 +103,7 @@ module Stubby
       is = installed_stubs
 
       if File.exists?(session_config_path)
-        Hash[Oj.load(File.read(session_config_path)).collect { |k, v|
+        Hash[MultiJson.load(File.read(session_config_path)).collect { |k, v|
           is[k].target = v
           [k, is[k]]
         }]

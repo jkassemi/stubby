@@ -63,7 +63,9 @@ module Stubby
     end
 
     get "/stubs/activated.json" do
-      json Api.enabled_stubs
+      json Hash[Api.enabled_stubs.collect { |name, stub|
+        [name, stub.options]
+      }]
     end
 
     post "/reset.json" do

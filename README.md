@@ -22,6 +22,9 @@ Install the stubby gem:
 
 		> $ sudo gem install stubby
 
+## Available Options
+
+
 ## Local Agent (Standard)
 
                 > $ sudo stubby start staging

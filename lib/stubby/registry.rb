@@ -1,4 +1,3 @@
-require 'oj'
 require 'pry'
 require 'httpi'
 
@@ -120,11 +119,11 @@ module Stubby
 
     def remote_index
       response = HTTPI.get("http://github.com/jkassemi/stubby/index.json")
-      Oj.load(response.body) if response.code == 200
+      MultiJson.load(response.body) if response.code == 200
     end
 
     def local_index
-      Oj.load(File.read(File.expand_path(File.join('~', '.stubby', "index.json"))))
+      MultiJson.load(File.read(File.expand_path(File.join('~', '.stubby', "index.json"))))
     rescue 
       {}
     end
@@ -142,7 +141,7 @@ module Stubby
       current_index = local_index
 
       write_local_index do |index|
-        index.puts Oj.dump(local_index.merge({item.name => {item.version => item.location}}))
+        index.puts MultiJson.dump(local_index.merge({item.name => {item.version => item.location}}))
       end
     end
   end

@@ -7,7 +7,7 @@ describe Stubby::Registry do
 
   before { 
     stub_request(:get, /github\.com.*/).
-      to_return(body: Oj.dump({
+      to_return(body: MultiJson.dump({
         "example" => {
           "v1.0.0" => "http://example.com/stubby.zip",
           "v2.0.0" => "http://example.com/stubby2.zip"

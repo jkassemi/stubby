@@ -1,4 +1,3 @@
-require 'oj'
 require 'stubby/system'
 
 module Stubby

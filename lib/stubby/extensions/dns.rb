@@ -25,7 +25,7 @@ module Extensions
       def process(name, resource_class, transaction)
           body = HTTPI.post("http://#{STUBBY_MASTER}:9000/rules/search.json", trigger: name).body
 
-          instruction = Oj.load(body)
+          instruction = MultiJson.load(body)
 
     		if instruction.nil? or instruction == "@"
     			transaction.passthrough!(UPSTREAM)

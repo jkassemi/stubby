@@ -11,7 +11,7 @@ module Stubby
     end
 
     def modes
-      @modes ||= Oj.load(File.read(path))
+      @modes ||= MultiJson.load(File.read(path))
     rescue
       {}
     end

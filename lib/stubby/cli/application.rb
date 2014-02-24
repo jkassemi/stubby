@@ -12,6 +12,19 @@ module Stubby
 
       # TODO: filesystem watch all config directories for change
       desc "start ENVIRONMENT", "Starts stubby HTTP and DNS servers"
+      long_desc <<-LONGDESC
+        > $ sudo stubby start [ENVIRONMENT='development']
+
+        Starts the stubby HTTP and DNS servers and loads the configuration
+        from `Stubfile.json` for the named environment. If no environment
+        is given, we default to 'development'
+
+        An environment need not actually match a name in `Stubfile.json`.
+        This allows you to use environments named in dependencies but not
+        in the application. If no rules match the environment, Stubby 
+        just won't override any behaviors.
+      LONGDESC
+
       def start(environment="development")
         unless File.exists?("Stubfile.json")
           puts "[ERROR]: Stubfile.json not found!"
@@ -28,7 +41,7 @@ module Stubby
           return
         end
 
-        environments = Oj.load(File.read("Stubfile.json"))
+        environments = MultiJson.load(File.read("Stubfile.json"))
 
         File.write(pidfile, Process.pid)
 
@@ -37,54 +50,96 @@ module Stubby
         master.run!
       end
 
-      desc "env", "Switch stubby environment"
+      desc "env NAME", "Switch stubby environment"
+      long_desc <<-LONGDESC
+        > $ sudo stubby env test
+        > {"status":"ok"}
+      LONGDESC
       def env(name=nil)
         unless master_running?
           puts "[ERROR]: Stubby must be running to run 'environment'"
           return
         end
 
-        if name == nil
-          environment = Oj.load(HTTPI.get("http://#{STUBBY_MASTER}:9000/environment.json").body)["environment"]
-          environments = Oj.load(HTTPI.get("http://#{STUBBY_MASTER}:9000/environments.json").body)
-
-          puts Oj.dump("current" => environment, "available" => environments["environments"])
-        else
-          puts HTTPI.post("http://#{STUBBY_MASTER}:9000/environment.json", environment: name).body
-        end
+        puts HTTPI.post("http://#{STUBBY_MASTER}:9000/environment.json", environment: name).body
       end
     
       desc "search", "View all available stubs"
+      long_desc <<-LONGDESC
+        View all available registered stubs. These are stubs that you can use
+        as dependencies in Stubfile.json.
+
+        > $ sudo stubby search
+        > {
+        >   "example":[
+        >     {
+        >       "name":"example",
+        >       "version":"v0.0.1",
+        >       ...
+        >    }
+        >  ],
+        >  "spreedly":[
+        >    {
+        >      "name":"spreedly",
+        >      "version":"v0.0.1",
+        >       ...
+        >    }
+        >  ]
+        > }
+
+        Wildcard supported for search:
+
+        > $ sudo stubby search ex*
+        > {
+        >   "example":[
+        >     {
+        >       "name":"example",
+        >       "version":"v0.0.1",
+        >       ...
+        >    }
+        >  ]
+        > }
+
+      LONGDESC
       def search(name=nil)
         if master_running?
-          available = Oj.parse(HTTPI.get("http://#{STUBBY_MASTER}:9000/stubs/available.json").body)
+          available = MultiJson.load(HTTPI.get("http://#{STUBBY_MASTER}:9000/stubs/available.json").body)
         else
           available = Stubby::Api.registry.index
         end
 
-        if name.nil?
-          puts Oj.dump(available)
-        else
-          puts Oj.dump(available[name])
-        end
+        puts MultiJson.dump(available.select { |key, ri| 
+          File.fnmatch(name || "*", key)
+        }, pretty: true)
       end
 
-      desc "status NAME", "View current status for stub NAME"
-      def status(name=nil)
-        environment = Oj.load(HTTPI.get("http://#{STUBBY_MASTER}:9000/environment.json").body)["environment"]
-        environments = Oj.load(HTTPI.get("http://#{STUBBY_MASTER}:9000/environments.json").body)
+      desc "status", "View current rules"
+      long_desc <<-LONGDESC
+        > $ sudo bin/stubby status
+        > {
+        >   "rules":{
+        >     "example":{
+        >       "admin.example.com":"10.0.1.1",
+        >       ...
+        >     },
+        >     "_":{
+        >        "dependencies":{
+        >          "example":"staging"
+        >        },
+        >        "(https?://)?example.com":"http://localhost:3000"
+        >      }
+        >    },
+        >    "environment":"test"
+        >  }
+      LONGDESC
+      def status
+        environment = MultiJson.load(HTTPI.get("http://#{STUBBY_MASTER}:9000/environment.json").body)["environment"]
 
         if master_running?
-          activated = Oj.load(HTTPI.get("http://#{STUBBY_MASTER}:9000/stubs/activated.json").body)
+          activated = MultiJson.load(HTTPI.get("http://#{STUBBY_MASTER}:9000/stubs/activated.json").body)
+          puts MultiJson.dump({ "rules" => activated, "environment" => environment }, pretty: true)
         else
-          puts "[ERROR] - Stubby currently not running"
-          return
-        end
-
-        if name.nil?
-          puts Oj.dump("rules" => activated, "available" => environments, "environment" => environment)
-        else
-          puts Oj.dump("rules" => activated[name], "available" => environments, "environment" => environment)
+          puts MultiJson.dump(status: "error", message: "Stubby currently not running")
         end
       end
 

@@ -1,8 +1,6 @@
 require 'logger'
 require 'sinatra/base'
 require 'liquid'
-require 'oj'
-require 'pry'
 require 'httpi'
 require 'rack/ssl'
 
@@ -130,7 +128,7 @@ module Extensions
       end
 
       def instruction
-        Oj.load(HTTPI.post("http://#{STUBBY_MASTER}:9000/rules/search.json", 
+        MultiJson.load(HTTPI.post("http://#{STUBBY_MASTER}:9000/rules/search.json", 
           trigger: "http://#{request.host}").body)
       end
 
