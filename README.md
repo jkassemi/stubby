@@ -24,78 +24,85 @@ Install the stubby gem:
 
 ## Available Options
 
+                > $ sudo stubby -h
+                > Commands:
+                >  stubby env NAME           # Switch stubby environment
+                >  stubby help [COMMAND]     # Describe available commands or one specific command
+                >  stubby search             # View all available stubs
+                >  stubby start ENVIRONMENT  # Starts stubby HTTP and DNS servers, default env ENVIRONMENT
+                >  stubby status             # View current rules
 
-## Local Agent (Standard)
+## Getting Started
 
-                > $ sudo stubby start staging
-                > Installing facebook stub...
-                > Installing github stub...
-                > CTRL-C to exit Stubby
+Stubby uses `Stubfile.json` for configuration. This file includes a mapping of
+environments to a number of rules that define server configurations and stub
+usage for the project. 
 
-The 'development' and 'staging' modes for this project both require facebook 
-in test mode and github in test mode. Our project lives at http://example.com
-in production - but we develop on localhost:3000. Don't worry, stubby!
-
-Stubby is running a DNS and HTTP server on your local system that will
-appropriately send facebook and github api requests to a local stub, and will
-forward all requests to http(s)://example.com to http://localhost:3000 -
-perfect for app development.
-
-Just hit CTRL-C to revert your system to normal.
-
-The local agent uses the Stubfile.json file in the working directory, installing
-and loading all defined stubs. Use the Stubfile.json file to declare your
-environments and their dependencies:
-
-                > $ cd ~/Documents/project && cat Stubfile.json
+                > cd ~/MyProject
+                > cat Stubfile.json
                 > {
-                >   "development": {
-                >     "dependencies": {
-                >       "facebook": "test",
-                >       "github": "test"
-                >     },
+                >  "test": {
+                >    "dependencies": {
+                >      "example": "staging"
+                >    },
                 >
-                >     "(https?:\/\/)?example.com": "http://localhost:3000"
-                >   },
-                > 
-                >   "staging": { ... }
+                >    "(https?:\/\/)?example.com": "http://localhost:3000"
+                >  },
+                >
+                >  "staging": {
+                >    "dependencies": {
+                >      "example": "staging"
+                >    },
+                >
+                >    "example.com": "dns-cname://aws..."
+                >  }
                 > }
 
-## Stubs
+                > $ sudo stubby start
 
-Search for available stubs:
+The 'test' and 'staging' modes for this project both include rules for the
+'example' stub, and then define a single rule of their own. Stubby starts
+by default in the 'development' environment, so with this `Stubfile.json`,
+the stubby server is not yet modifying any requests. In a new terminal:
 
+                > $ sudo stubby env test
 
-		> $ stubby search
-		{ "example" => ... }
-		
-Install a stub outside of a Stubfile.json dependency list:
+Switches stubby to test mode. Now the 'example' stub is activated, and
+additionally any requests to http or https versions of example.com are
+routed to http://localhost:3000. Let's take a look at the rules applied:
 
-		> $ stubby install example
+                > $ sudo bin/stubby status
+                > {
+                >  "rules":{
+                >    "example":{
+                >      "_comment":"All SMTP traffic (NOT YET FUNCTIONAL)",
+                >      "admin.example.com":"10.0.1.1",
+                >      "admin2.example.com":"dns-cname://admin.example.com",
+                >      "(http?://)?merchant.example.com":"http://10.0.1.1",
+                >      "(https?://)?.*.example.io":"http://10.0.1.1",
+                >      "(https?://)?.*mail.*yahoo.*":"http://en.wikipedia.org/wiki/RTFM",
+                >      "(https?://)?yahoo.com":"https-redirect://duckduckgo.com",
+                >      "stubby\\..*":"file:///var/www/tmp",
+                >      "api.example.com":"file://~/.stubby/example/files",
+                >      "smtp://.*":"log:///var/log/out.txt"
+                >    },
+                >    "_":{
+                >      "dependencies":{
+                >        "example":"staging"
+                >      },
+                >      "(https?://)?example.com":"http://localhost:3000"
+                >    }
+                >  },
+                >  "environment":"test"
+                > }
 
-List state of installed stubs:
+This shows us all activated rules. the "_" indicates that the rules are loaded
+from the current `Stubfile.json`. We also see that requests to yahoo.com are
+redirected to https://duckduckgo.com:
 
-		> $ stubby list
-		> _example_ [staging,production]
-
-
-## Modes
-
-Each stub can be configured with several modes. By default, a stub 
-without a mode is inactive. Use the mode command to set the mode:
-
-		> $ stubby mode example staging
-		> _example_ [*staging,production]
-
-The `example` stub is now in staging mode. DNS requests will be routed
-against the rules in the `example` stub configuration.
-
-To disable the DNS overrides, use the mode command again with no mode
-argument:
-
-		> $ stubby mode example
-		> _example_ [staging,production]
-	
+To revert the system back to normal, just CTRL-C from the main stubby process.
+This will revert any changes made to configure DNS servers for all network 
+interfaces and will shut down the stubby server.
 
 ## Stubbing
 
