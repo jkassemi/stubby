@@ -45,6 +45,10 @@ module Stubby
           master.config.activate(name, mode)
         end
 
+        settings.delete("dependencies")
+
+        master.config.activate_transient(settings)
+
         File.write(File.expand_path("~/.stubby/pid"), Process.pid)
 
         master.run!
