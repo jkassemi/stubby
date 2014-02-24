@@ -10,6 +10,7 @@ Gem::Specification.new do |s|
   s.homepage    = "http://github.com/jkassemi/stubby"
   s.summary     = ""
   s.description = ""
+  s.bindir      = "bin"
  
   s.required_rubygems_version = ">= 1.8.23"
   s.rubyforge_project         = "stubby"
@@ -18,12 +19,13 @@ Gem::Specification.new do |s|
   s.add_dependency 'ipaddress'
   s.add_dependency 'sinatra'
   s.add_dependency 'liquid'
-  s.add_dependency 'oj'
+  s.add_dependency 'multi_json'
   s.add_dependency 'httpi'
   s.add_dependency 'rack-ssl'
   s.add_dependency 'dns-zonefile'
   s.add_dependency 'thor'
   s.add_dependency 'listen'
+  s.add_dependency 'thin'
 
   s.add_development_dependency "rspec"
  

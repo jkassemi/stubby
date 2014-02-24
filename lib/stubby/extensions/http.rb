@@ -31,7 +31,7 @@ module Extensions
         end
 
         def adapters
-          @adapters ||= {}
+          @@adapters ||= {}
         end
       end
 
@@ -81,8 +81,6 @@ module Extensions
           request = HTTPI::Request.new
           request.url = out.to_s
 
-          puts request.inspect
-
           response = HTTPI.get(request)
 
           response.headers.delete "transfer-encoding"
@@ -129,7 +127,7 @@ module Extensions
 
       def instruction
         MultiJson.load(HTTPI.post("http://#{STUBBY_MASTER}:9000/rules/search.json", 
-          trigger: "http://#{request.host}").body)
+          trigger: "#{request.scheme}://#{request.host}").body)
       end
 
       def url
@@ -151,10 +149,22 @@ module Extensions
           set :port, port
           set :stubby_session, session
 
-          super(session, {
-            :SSLEnable => true,
-            :SSLCertName => %w[CN localhost]
-          })
+          #super(session, {
+          #  :SSLEnable => true,
+          #  :SSLCertName => %w[CN localhost]
+          #})
+
+          Rack::Handler::Thin.run(self, {
+            :Host => STUBBY_MASTER,
+            :Port => 443
+          }) do |server|
+            server.ssl = true
+            server.ssl_options = {
+              :verify_peer => false
+            }
+          end
+        rescue => e
+          puts "#{e.inspect}" 
         end
       end
     end
