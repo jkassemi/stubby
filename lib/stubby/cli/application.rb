@@ -11,19 +11,10 @@ module Stubby
       default_task :start
 
       # TODO: filesystem watch all config directories for change
-      desc "start MODE", "Starts stubby HTTP and DNS servers"
-      def start(global_mode="development")
+      desc "start ENVIRONMENT", "Starts stubby HTTP and DNS servers"
+      def start(environment="development")
         unless File.exists?("Stubfile.json")
           puts "[ERROR]: Stubfile.json not found!"
-          return
-        end
-
-        environments = Oj.load(File.read("Stubfile.json"))
-
-        settings = environments[global_mode]
-
-        if settings.nil?
-          puts "[ERROR]: No #{global_mode} found. Try #{environments.keys.sort.inspect}"
           return
         end
 
@@ -37,23 +28,32 @@ module Stubby
           return
         end
 
-        master = Stubby::Master.new
+        environments = Oj.load(File.read("Stubfile.json"))
 
-        # Install stubs we don't have
-        # TODO: versioning syntax?
-        (settings["dependencies"] || []).each do |name, mode|
-          master.config.activate(name, mode)
-        end
+        File.write(pidfile, Process.pid)
 
-        settings.delete("dependencies")
-
-        master.config.activate_transient(settings)
-
-        File.write(File.expand_path("~/.stubby/pid"), Process.pid)
-
+        master = Stubby::Master.new(environments)
+        master.environment = environment
         master.run!
       end
 
+      desc "env", "Switch stubby environment"
+      def env(name=nil)
+        unless master_running?
+          puts "[ERROR]: Stubby must be running to run 'environment'"
+          return
+        end
+
+        if name == nil
+          environment = Oj.load(HTTPI.get("http://#{STUBBY_MASTER}:9000/environment.json").body)["environment"]
+          environments = Oj.load(HTTPI.get("http://#{STUBBY_MASTER}:9000/environments.json").body)
+
+          puts Oj.dump("current" => environment, "available" => environments["environments"])
+        else
+          puts HTTPI.post("http://#{STUBBY_MASTER}:9000/environment.json", environment: name).body
+        end
+      end
+    
       desc "search", "View all available stubs"
       def search(name=nil)
         if master_running?
@@ -71,22 +71,30 @@ module Stubby
 
       desc "status NAME", "View current status for stub NAME"
       def status(name=nil)
+        environment = Oj.load(HTTPI.get("http://#{STUBBY_MASTER}:9000/environment.json").body)["environment"]
+        environments = Oj.load(HTTPI.get("http://#{STUBBY_MASTER}:9000/environments.json").body)
+
         if master_running?
-          activated = Oj.parse(HTTPI.get("http://#{STUBBY_MASTER}:9000/stubs/activated.json").body)
+          activated = Oj.load(HTTPI.get("http://#{STUBBY_MASTER}:9000/stubs/activated.json").body)
         else
-          activated = []
+          puts "[ERROR] - Stubby currently not running"
+          return
         end
 
         if name.nil?
-          puts Oj.dump(activated)
+          puts Oj.dump("rules" => activated, "available" => environments, "environment" => environment)
         else
-          puts Oj.dump(activated[name])
+          puts Oj.dump("rules" => activated[name], "available" => environments, "environment" => environment)
         end
       end
 
       private
+      def pidfile
+        @pidfile ||= File.expand_path("~/.stubby/pid")
+      end
+
       def master_running?
-        Process.kill(0, File.read("~/stubby/pid"))
+        Process.kill(0, File.read(pidfile).to_i)
       rescue
         false
       end

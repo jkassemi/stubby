@@ -24,7 +24,7 @@ Install the stubby gem:
 
 ## Local Agent (Standard)
 
-                > $ sudo stubby local development
+                > $ sudo stubby start staging
                 > Installing facebook stub...
                 > Installing github stub...
                 > CTRL-C to exit Stubby
@@ -58,20 +58,6 @@ environments and their dependencies:
                 >   "staging": { ... }
                 > }
 
-## System Agent (Global)
-
-Start the stubby agent. This launches a DNS server and HTTP server on your
-local system. All DNS requests are routed through the Stubby DNS server. If
-no installed stub matches a request, it's passed upstream (Google's public DNS).
-
-		> $ sudo stubby agent
-
-There's some interface work to be done on stopping the agent -
- CTRL-C is unreliable at the moment. Additionally, it'd be nice to launchctl 
-the stubby agent so that we don't start it from scratch. 
-Homebrew recipe would be nice, too. But, it seems to make more sense to just
-maintain the local agent with the Stubfile.json support... Feedback desired.
-
 ## Stubs
 
 Search for available stubs:
@@ -80,7 +66,7 @@ Search for available stubs:
 		> $ stubby search
 		{ "example" => ... }
 		
-Install a stub:
+Install a stub outside of a Stubfile.json dependency list:
 
 		> $ stubby install example
 

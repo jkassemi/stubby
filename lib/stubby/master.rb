@@ -5,6 +5,7 @@ module Stubby
     class << self
       attr_accessor :enabled_stubs
       attr_accessor :registry
+      attr_accessor :environments, :environment
 
       def enabled_stubs
         @enabled_stubs ||= {} 
@@ -12,6 +13,29 @@ module Stubby
 
       def registry
         @registry ||= Stubby::Registry.new
+      end
+
+      def reset
+        @enabled_stubs = nil
+        @environment = nil
+        @registry = nil
+      end
+
+      def env_settings
+        (@environments[environment] || {}).dup
+      end
+
+      def environment=(name)
+        reset
+        @environment = name
+
+        (env_settings["dependencies"] || []).each do |depname, mode|
+          activate(depname, mode)
+        end
+
+        env_settings.delete("dependencies")
+
+        activate_transient(env_settings)
       end
 
       def activate(name, mode)
@@ -43,9 +67,21 @@ module Stubby
     end
 
     post "/reset.json" do
-      Api.enabled_stubs = nil
-      Api.registry = nil      
+      Api.reset
       json status: "ok"
+    end
+
+    get "/environment.json" do
+      json environment: (Api.environment || "undefined")
+    end
+
+    post "/environment.json" do
+      Api.environment = params[:environment]
+      json status: "ok"
+    end
+
+    get "/environments.json" do
+      json environments: Api.environments
     end
 
     post "/stubs/transient/activate.json" do
@@ -68,7 +104,7 @@ module Stubby
   class Master
     attr_accessor :extensions, :config
 
-    def initialize
+    def initialize(environments)
       @extensions = [
         Extensions::DNS::Server.new,
         Extensions::HTTP::Server.new,
@@ -76,6 +112,11 @@ module Stubby
       ]
 
       @config = Api
+      @config.environments = environments
+    end
+
+    def environment=(environment)
+      @config.environment = environment
     end
 
     def run!(options={})
