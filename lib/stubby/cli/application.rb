@@ -1,202 +1,161 @@
 require 'thor'
 
 require 'stubby/registry'
-require 'stubby/session'
 require 'stubby/extensions/dns'
 require 'stubby/extensions/http'
 
 module Stubby
   module CLI
     class Application < Thor
-      default_task :status
+      default_task :start
 
       # TODO: filesystem watch all config directories for change
-      desc "agent", "Starts stubby HTTP and DNS servers"
-      def agent
-        if permissions? 
-          puts "Stubby agent started! CTRL-C to revert system to normal..."
-          current_session.run!
-        else
-          puts "[ERROR] Stubby needs _MORE POWER_ - give it sudo..."
-        end
-      end
-
-      desc "list", "View status for all installed stubs"
+      desc "start ENVIRONMENT", "Starts stubby HTTP and DNS servers"
       long_desc <<-LONGDESC
-        Alias of `status` without a NAME. This is here to see which I end up
-        using most frequently.
+        > $ sudo stubby start [ENVIRONMENT='development']
 
-        > $ stubby status
-        > $ stubby list
+        Starts the stubby HTTP and DNS servers and loads the configuration
+        from `Stubfile.json` for the named environment. If no environment
+        is given, we default to 'development'
+
+        An environment need not actually match a name in `Stubfile.json`.
+        This allows you to use environments named in dependencies but not
+        in the application. If no rules match the environment, Stubby 
+        just won't override any behaviors.
       LONGDESC
-      def list
-        status()
-      end
 
-      desc "status NAME", "View status for stub NAME"
-      long_desc <<-LONGDESC
-        View status for stub NAME. If NAME is not specified, status will list
-        all stubs from the config paths. NAME may be a glob, in which case it
-        will match any name.
-
-        > $ stubby status
-        > _example_
-        > _github_ [happy,angry,unavailable]
-
-        > $ stubby mode github happy
-        > _github_ *happy
-
-        > $ stubby status github
-        > _github_ [*happy,angry,unavailable]
-      LONGDESC
-      def status(name=nil)
-        if name.nil?
-          if current_session.system.stubs.empty?
-            puts "[INFO] No stubs"
-          else
-            current_session.system.stubs.each do |k, v|
-              status(k) unless k.nil?
-            end
-          end
-        else
-          mode = current_session.system.stubs[name].target
-
-          modes = current_session.system.stubs[name].modes.collect { |key, options|
-            key == mode ? "*#{key}" : key
-          }
-
-          mode = "*#{mode}*" unless mode.to_s.empty?
-          modes = modes.empty? ? "" : "[#{modes.join(",")}]"
-
-          puts "_#{name}_ #{modes}"
-        end
-      end
-
-      desc "mode NAME [MODE]", "View or set mode for NAME"
-      long_desc <<-LONGDESC
-        Set mode for NAME. If MODE is specified, stubby agent will
-        assign that mode to NAME. Otherwise stubby will reset to default
-        for the mode (no configurations applied)
-
-        > $ stubby mode github
-        > _github_
-
-        > $ stubby mode github happy 
-        > _github_ [*happy]
-
-        > $ stubby mode github
-        > _github_
-
-      LONGDESC
-      def mode(name, mode=nil)
-        current_session.system.target(name, mode)
-        status(name)
-      end 
-
-      desc "local", "Run a local agent based on the Stubfile.json configuration"
-      def local(global_mode)
+      def start(environment="development")
         unless File.exists?("Stubfile.json")
           puts "[ERROR]: Stubfile.json not found!"
           return
         end
 
-        environments = Oj.load(File.read("Stubfile.json"))
-
-        settings = environments[global_mode]
-
-        if settings.nil?
-          puts "[ERROR]: No #{global_mode} found. Try #{environments.keys.sort.inspect}"
+        unless permissions?
+          puts "[ERROR]: ATM I need to be run with sudo..."
           return
         end
 
-        # Install stubs we don't have
-        # TODO: versioning syntax?
-        (settings["dependencies"] || []).each do |stub, mode|
-          install(stub)
-        end
-
-        old = current_session.system.session_name
-
-        if old == "_local"
-          puts "[ERROR]: Already running a local session?"
+        if master_running?
+          puts "[ERROR]: Stubby's already running!"
           return
         end
 
-        current_session.system.session_remove('_local')
-        current_session.system.session_name = '_local'
+        environments = MultiJson.load(File.read("Stubfile.json"))
 
-        (settings["dependencies"] || []).each do |stub, mode|
-          mode(stub, mode)
-        end
+        File.write(pidfile, Process.pid)
 
-        settings.delete "dependencies"
-        current_session.system.stubs["local"] = LocalStub.new(settings)
-
-        current_session.run!(:reload => false)
-      ensure
-        current_session.system.session_name = old
+        master = Stubby::Master.new(environments)
+        master.environment = environment
+        master.run!
       end
 
-      desc "search", "Search for a stub"
-      def search(name=nil)
-        if name.nil?
-          puts current_session.registry.index.inspect
-        else 
-          puts current_session.registry.latest(name).inspect
-        end
-      end
-
-      desc "install", "Install a stub"
-      option(:version)
-      option(:source)
+      desc "env NAME", "Switch stubby environment"
       long_desc <<-LONGDESC
-        > $ stubby install github
-        > _github_
-
-        > $ stubby install http://example.com/mystub.zip
-        > mystub [mode1,mode2]
-
-        > $ stubby install github --version=v0.0.1
-        > github [mode1,mode2]
-
-        > $ stubby install github --version=v0.0.1 --source=/Users/bob/github.zip
-        > github [mode1,mode2]
-
-        # TODO:
-        > $ stubby install ./stubby.json
+        > $ sudo stubby env test
+        > {"status":"ok"}
       LONGDESC
-      def install(name, override=nil)
-        current_session.registry.install(name, override || options)
+      def env(name=nil)
+        unless master_running?
+          puts "[ERROR]: Stubby must be running to run 'environment'"
+          return
+        end
+
+        puts HTTPI.post("http://#{STUBBY_MASTER}:9000/environment.json", environment: name).body
+      end
+    
+      desc "search", "View all available stubs"
+      long_desc <<-LONGDESC
+        View all available registered stubs. These are stubs that you can use
+        as dependencies in Stubfile.json.
+
+        > $ sudo stubby search
+        > {
+        >   "example":[
+        >     {
+        >       "name":"example",
+        >       "version":"v0.0.1",
+        >       ...
+        >    }
+        >  ],
+        >  "spreedly":[
+        >    {
+        >      "name":"spreedly",
+        >      "version":"v0.0.1",
+        >       ...
+        >    }
+        >  ]
+        > }
+
+        Wildcard supported for search:
+
+        > $ sudo stubby search ex*
+        > {
+        >   "example":[
+        >     {
+        >       "name":"example",
+        >       "version":"v0.0.1",
+        >       ...
+        >    }
+        >  ]
+        > }
+
+      LONGDESC
+      def search(name=nil)
+        if master_running?
+          available = MultiJson.load(HTTPI.get("http://#{STUBBY_MASTER}:9000/stubs/available.json").body)
+        else
+          available = Stubby::Api.registry.index
+        end
+
+        puts MultiJson.dump(available.select { |key, ri| 
+          File.fnmatch(name || "*", key)
+        }, pretty: true)
       end
 
-      desc "update", "Remove stub and then install stub"
-      def update(name)
-        uninstall(name)
-        install(name)
-      end
+      desc "status", "View current rules"
+      long_desc <<-LONGDESC
+        > $ sudo bin/stubby status
+        > {
+        >   "rules":{
+        >     "example":{
+        >       "admin.example.com":"10.0.1.1",
+        >       ...
+        >     },
+        >     "_":{
+        >        "dependencies":{
+        >          "example":"staging"
+        >        },
+        >        "(https?://)?example.com":"http://localhost:3000"
+        >      }
+        >    },
+        >    "environment":"test"
+        >  }
+      LONGDESC
+      def status
+        environment = MultiJson.load(HTTPI.get("http://#{STUBBY_MASTER}:9000/environment.json").body)["environment"]
 
-      desc "uninstall", "Remove a stub"
-      def uninstall(name)
-        current_session.registry.uninstall(name)
+        if master_running?
+          activated = MultiJson.load(HTTPI.get("http://#{STUBBY_MASTER}:9000/stubs/activated.json").body)
+          puts MultiJson.dump({ "rules" => activated, "environment" => environment }, pretty: true)
+        else
+          puts MultiJson.dump(status: "error", message: "Stubby currently not running")
+        end
       end
-
-      register(CLI::Session, 'session', 'session <command>', 'manages saved sessions')
 
       private
-      def current_session
-        # TODO: allow configuration of this
-        @session ||= Stubby::Session.new("172.16.123.1").tap do |session|
-          session.extensions << Extensions::Reload.new
-          session.extensions << Extensions::DNS::Server.new
-          session.extensions << Extensions::HTTP::Server.new
-          session.extensions << Extensions::HTTP::SSLServer.new
-        end
+      def pidfile
+        @pidfile ||= File.expand_path("~/.stubby/pid")
+      end
+
+      def master_running?
+        Process.kill(0, File.read(pidfile).to_i)
+      rescue
+        false
       end
 
       def permissions?
         `whoami`.strip == "root"
       end
     end
-
   end
 end

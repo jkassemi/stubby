@@ -11,18 +11,18 @@ module Stubby
     end
 
     def modes
-      @modes ||= Oj.load(File.read(path))
+      @modes ||= MultiJson.load(File.read(path))
     rescue
       {}
     end
 
     def path=(v)
-      unless v and File.exists?(v)
+      unless v and File.exists?(File.expand_path(v))
         puts "'#{v}' not found. Use --config to specify a different config file"
         exit
       end
 
-      @path = v
+      @path = File.expand_path(v)
     end
 
     def options
@@ -40,7 +40,7 @@ module Stubby
     end
   end
 
-  class LocalStub < Stub
+  class TransientStub < Stub
     def initialize(options)
       @options = options
     end

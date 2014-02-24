@@ -1,8 +1,6 @@
 require 'logger'
 require 'sinatra/base'
 require 'liquid'
-require 'oj'
-require 'pry'
 require 'httpi'
 require 'rack/ssl'
 
@@ -20,10 +18,10 @@ module Extensions
         def run!(session, server_settings={})
           puts self.inspect + ": " + port.to_s
           
-          set :bind, session.host
+          set :bind, STUBBY_MASTER
           set :port, port
           set :stubby_session, session
-          set :server, 'webrick'
+          set :server, 'thin'
 
           super(:server_settings => server_settings)
         end
@@ -130,7 +128,8 @@ module Extensions
       end
 
       def instruction
-        @instruction ||= settings.stubby_session.search("http://#{request.host}")
+        MultiJson.load(HTTPI.post("http://#{STUBBY_MASTER}:9000/rules/search.json", 
+          trigger: "http://#{request.host}").body)
       end
 
       def url
@@ -148,7 +147,7 @@ module Extensions
         end
 
         def run!(session)
-          set :bind, session.host
+          set :bind, STUBBY_MASTER
           set :port, port
           set :stubby_session, session
 

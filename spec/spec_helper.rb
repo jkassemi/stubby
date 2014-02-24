@@ -11,7 +11,6 @@ RSpec.configure do |config|
 
   config.before(:each) do
     FileUtils.mkdir_p File.expand_path('.test')
-    Stubby::Paths.root_path = File.expand_path('.test')
   end
 
   config.after(:each) do
