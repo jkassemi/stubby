@@ -132,9 +132,8 @@ module Stubby
         >  }
       LONGDESC
       def status
-        environment = MultiJson.load(HTTPI.get("http://#{STUBBY_MASTER}:9000/environment.json").body)["environment"]
-
         if master_running?
+          environment = MultiJson.load(HTTPI.get("http://#{STUBBY_MASTER}:9000/environment.json").body)["environment"]
           activated = MultiJson.load(HTTPI.get("http://#{STUBBY_MASTER}:9000/stubs/activated.json").body)
           puts MultiJson.dump({ "rules" => activated, "environment" => environment }, pretty: true)
         else
