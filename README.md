@@ -208,6 +208,19 @@ Given a rule:
 		
 DNS will resolve to the stubby server, and the web request to http://yahoo.com will redirect to http://duckduckgo.com.
 
+### Capturing Outgoing Email
+
+Stubby includes an SMTP extension to capture outgoing messages. Specify the
+domain to capture mail from and forward to smtp://
+
+                "dns-mx://.*\.example\.com": "smtp://"
+
+will ensure any message sent by your system directly (this does not include
+messages sent from yahoo or gmail) will be captured by Stubby. Visit
+http://outbox.stubby.dev to see the captured messages. 
+
+Mail capture is currently provided by the "MailCatcher" gem. 
+
 ### Vision
 
 * protocol in instruction becomes a plugin system. dns-cname:, for instance,

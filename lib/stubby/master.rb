@@ -44,8 +44,8 @@ module Stubby
         self.enabled_stubs[name] = registry_item.stub(mode)
       end
 
-      def activate_transient(options)
-        self.enabled_stubs["_"] = TransientStub.new(options)
+      def activate_transient(options, key="_")
+        self.enabled_stubs[key] = TransientStub.new(options)
       end
     end
 
@@ -87,7 +87,7 @@ module Stubby
     end
 
     post "/stubs/transient/activate.json" do
-      Api.activate_transient(params[:options])
+      Api.activate_transient(MultiJson.load(params[:options]), params[:key])
       json status: "ok"
     end
 
@@ -110,7 +110,8 @@ module Stubby
       @extensions = [
         Extensions::DNS::Server.new,
         Extensions::HTTP::Server.new,
-        Extensions::HTTP::SSLServer.new
+        Extensions::HTTP::SSLServer.new,
+        Extensions::SMTP::Server.new
       ]
 
       @config = Api
@@ -122,21 +123,39 @@ module Stubby
     end
 
     def run!(options={})
-      begin
-        assume_network_interface
-
-        running.each do |process|
-          puts "wait for #{process}"
-          Process.waitpid(process)
-        end
-      ensure
-        unassume_network_interface
+      run_network do
+        run_master do
+          run_extensions
+        end 
       end
     end
 
     private
-    def stop_extensions
+    def run_network
+      assume_network_interface
+      yield
+    ensure
+      unassume_network_interface
+    end
+
+    def run_master
+      $0 = "stubby: master"
+
+      Api.run! do
+        yield
+      end
+    end
+
+    def run_extensions
+      running.each do |process|
+        Process.waitpid(process)
+      end
+    end
+
+    def stop!
       puts "Shutting down..."
+
+      Api.stop!
 
       running.each do |process|
         Process.kill("INT", process)
@@ -146,14 +165,7 @@ module Stubby
     end
 
     def running
-      @running ||= [run_master_api, run_extensions].flatten
-    end
-
-    def run_master_api
-      Process.fork {
-        $0 = "stubby: [config api]"
-        Api.run!
-      }
+      @running ||= run_extensions
     end
 
     def run_extensions
@@ -165,7 +177,7 @@ module Stubby
       }
 
       trap("INT") { 
-        stop_extensions
+        stop!
       }
 
       return @running_extensions

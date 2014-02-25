@@ -26,6 +26,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'thor'
   s.add_dependency 'listen'
   s.add_dependency 'thin'
+  s.add_dependency 'mailcatcher'
 
   s.add_development_dependency "rspec"
  

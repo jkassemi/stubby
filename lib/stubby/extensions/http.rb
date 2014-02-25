@@ -82,7 +82,6 @@ module Extensions
           request.url = out.to_s
 
           response = HTTPI.get(request)
-
           response.headers.delete "transfer-encoding"
           response.headers.delete "connection"
 

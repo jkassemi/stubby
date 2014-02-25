@@ -23,49 +23,62 @@ module Extensions
       end
 
       def process(name, resource_class, transaction)
-          body = HTTPI.post("http://#{STUBBY_MASTER}:9000/rules/search.json", trigger: name).body
+          body = HTTPI.post("http://#{STUBBY_MASTER}:9000/rules/search.json", 
+            trigger: name).body
 
           instruction = MultiJson.load(body)
 
-    		if instruction.nil? or instruction == "@"
-    			transaction.passthrough!(UPSTREAM)
-    			return
-    		end
+          if instruction.nil? or instruction == "@"
+            unless name =~ /^dns-/
+              process("dns-#{symbol_from_resource_class(resource_class)}://#{name}", 
+                resource_class, transaction)
+            else
+              transaction.passthrough!(UPSTREAM)
+            end
 
-    		url = URI.parse(instruction)
+            return
+          end
 
-    		if url.scheme.to_s.empty?
-    			url = URI.parse("dns-a://" + instruction)
-    		elsif (url.scheme.to_s =~ /^dns-.*/).nil?
-    			url.host = STUBBY_MASTER
-    		end
+          url = URI.parse(instruction)
 
-    		response_resource_class = resource url.scheme.gsub('dns-', '')
+          if url.scheme.to_s.empty?
+            url = URI.parse("dns-a://" + instruction)
+          elsif (url.scheme.to_s =~ /^dns-.*/).nil?
+            url.host = STUBBY_MASTER
+          end
 
-    		if url.host.to_s.empty?
-    			url.host = STUBBY_MASTER
-    		end
+          response_resource_class = resource url.scheme.gsub('dns-', '')
 
-    		if !IPAddress.valid?(url.host) and response_resource_class == IN::A
-    			response_resource_class = IN::CNAME
-    		end
+          if url.host.to_s.empty?
+            url.host = STUBBY_MASTER
+          end
 
-    		response = url.host
+          if !IPAddress.valid?(url.host) and response_resource_class == IN::A
+            response_resource_class = IN::CNAME
+          end
 
-    		if response_resource_class == IN::CNAME
-    			response = Resolv::DNS::Name.create(url.host)
-    		end
+          response = url.host
 
-    		puts "DNS: #{name} => #{response}-#{resource_class.name})"
+          if [IN::CNAME, IN::MX].include? response_resource_class
+            response = Resolv::DNS::Name.create(url.host)
+          end
 
-    		transaction.respond!(response, 
-    			:resource_class => response_resource_class, 
-    			:ttl => 0)
+          puts "DNS: #{name} => #{response}-#{resource_class.name})"
+
+          if response_resource_class == IN::MX
+            transaction.respond!(10, response,
+              :resource_class => response_resource_class,
+              :ttl => 0)
+          else
+            transaction.respond!(response, 
+              :resource_class => response_resource_class, 
+              :ttl => 0)
+          end
       end
 
       def run!(session, options)
         return if options[:dns] == false
-        trap("INT"){ stop!  }
+        trap("INT"){ stop! }
 
         @session = session
         setup_references and run_dns_server
@@ -80,7 +93,14 @@ module Extensions
 
       def resource(pattern)
         return IN::A unless pattern.respond_to? :to_sym
+        symbol_to_resource_class[pattern.to_sym] || IN::A
+      end
 
+      def symbol_from_resource_class(klass)
+        symbol_to_resource_class.invert[klass] || :a
+      end
+
+      def symbol_to_resource_class
         {
           a:      IN::A,
           aaaa:   IN::AAAA,
@@ -93,7 +113,7 @@ module Extensions
           soa:    IN::SOA,
           txt:    IN::TXT,
           cname:  IN::CNAME
-        }[pattern.to_sym] || IN::A
+        }
       end
 
       def run_dns_server
