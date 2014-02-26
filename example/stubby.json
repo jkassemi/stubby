@@ -1,39 +1,30 @@
 {
   "staging": {
-    "_comment": "DNS 10.0.1.1 for admin.example.com",
+    // DNS 10.0.1.1 for admin.example.com
     "admin.example.com": "10.0.1.1",
 
-    "_comment": "CNAME admin2.example.com => admin.example.com",
-    "admin2.example.com": "dns-cname://admin.example.com",
+    // "CNAME admin2.example.com => admin.example.com
+    "dns://admin2.example.com": "dns-cname://admin.example.com",
 
-    "_comment": "if protocol present, DNS resolves to stubby",
-    
-    "_comment": "# DNS stubby, transparent HTTP proxy to 10.0.1.1, no host substitution (IP given)",
-    "http://merchant.example.com": "http://10.0.1.1",
+    // DNS stubby, transparent HTTP proxy to 10.0.1.1, no host substitution (IP given)
+    "http://(.*)\\.?example.com": "http://10.0.1.1",
 
-    "_comment": "# DNS stubby, transparent HTTP proxy to 10.0.1.1, no host substitution (IP given)",
-    "http://.*.example.io": "http://10.0.1.1",
+    // DNS stubby, all paths proxy to http://en.wikipedia.org/wiki/RTFM, host substitution
+    "https://g?mail.*\/.*": "http://en.wikipedia.org/wiki/RTFM",
 
-    "_comment": "# DNS stubby, all paths proxy to http://en.wikipedia.org/wiki/RTFM, host substitution",
-    "http://?.*mail.*yahoo.*": "http://en.wikipedia.org/wiki/RTFM",
-    "https://?.*mail.*yahoo.*": "http://en.wikipedia.org/wiki/RTFM",
+    // DNS stubby, all paths 302 redirect to duckduckgo.com (no path)
+    "http://yahoo.com": "http-redirect://duckduckgo.com",
 
-    "_comment": "# DNS stubby, all paths proxied (no path, not an IP)",
-    "https://yahoo.com": "http//duckduckgo.com",
+    // DNS stubby, all paths 302 redirect to duckduckgo.com https (no path)
+    "https://yahoo.com": "https-redirect://duckduckgo.com",
 
-    "_comment": "# DNS stubby, all paths 302 redirect to duckduckgo.com (no path)",
-    "https://yahoo.com": "http-redirect://blank?to=https://duckduckgo.com",
+    // DNS stubby (for all TLDs), file server contents from dir /var/www/tmp
+    ".*\\.stubby.dev": "file:///var/www/tmp",
 
-    "_comment": "# DNS stubby, all paths 302 redirect to duckduckgo.com https (no path)",
-    "https://yahoo.com": "https-redirect://blank?to=https://duckduckgo.com",
+    // DNS stubby, serve HTTP from stubby recipe root (~/.stubby/api.example.com)
+    "api.example.com": "file://~/.stubby/example/files",
 
-    "_comment": "DNS stubby (for all TLDs), file server contents from dir /var/www/tmp",
-    "http://stubby\\..*": "file:///var/www/tmp",
-
-    "_comment": "DNS stubby, serve HTTP from stubby recipe root (~/.stubby/api.example.com)",
-    "http://api.example.com": "file://~/.stubby/example/files",
-
-    "_comment": "All SMTP traffic (NOT YET FUNCTIONAL)",
+    // All SMTP traffic (NOT YET FUNCTIONAL)
     "smtp://.*": "log:///var/log/out.txt"
   }
 }
