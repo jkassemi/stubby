@@ -9,5 +9,5 @@
 
           // Capture outgoing email (if no remote server is used for delivery)
           "smtp://.*": "about://blank" 
-        },
+        }
 }
