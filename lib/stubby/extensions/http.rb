@@ -26,8 +26,10 @@ module Extensions
           super(:server_settings => server_settings)
         end
 
-        def adapter(name, &block)
-          adapters[name] = block
+        def adapter(*names, &block)
+          names.each do |name|
+            adapters[name] = block
+          end
         end
 
         def adapters
@@ -39,15 +41,7 @@ module Extensions
       set :static, false
 
       adapter "http-redirect" do
-        url.scheme = "http"
-        url.path = request.path if url.path.to_s.empty?
-        redirect to(url.to_s)
-      end
-
-      adapter "https-redirect" do
-        url.scheme = "https"
-        url.path = request.path if url.path.to_s.empty?
-        redirect to(url.to_s)
+        redirect to(instruction_params["to"])
       end
 
       adapter "file" do
@@ -73,36 +67,54 @@ module Extensions
         not_found(paths.join(",\n"))
       end
 
-      adapter "default" do
+      adapter "http-proxy" do
+        url.scheme = "http"
+
         if url.path.empty?
           # Proxy all requests, preserve incoming path
           out = url.dup
           out.path = request.path
           request = HTTPI::Request.new
           request.url = out.to_s
-
-          response = HTTPI.get(request)
-          response.headers.delete "transfer-encoding"
-          response.headers.delete "connection"
-
-          status(response.code)
-          headers(response.headers)
-          body(response.body)
-
         else
           # Proxy to the given path
           request = HTTPI::Request.new
           request.url = url.to_s
-
-          response = HTTPI.get(request)
-
-          response.headers.delete "transfer-encoding"
-          response.headers.delete "connection"
-
-          status(response.code)
-          headers(response.headers)
-          body(response.body)
         end
+
+        response = HTTPI.get(request)
+        response.headers.delete "transfer-encoding"
+        response.headers.delete "connection"
+
+        status(response.code)
+        headers(response.headers)
+        body(response.body)
+
+      end
+
+      adapter "https-proxy" do
+        url.scheme = "https"
+
+        if url.path.empty?
+          # Proxy all requests, preserve incoming path
+          out = url.dup
+          out.path = request.path
+          request = HTTPI::Request.new
+          request.url = out.to_s
+        else
+          # Proxy to the given path
+          request = HTTPI::Request.new
+          request.url = url.to_s
+        end
+
+        response = HTTPI.get(request)
+        response.headers.delete "transfer-encoding"
+        response.headers.delete "connection"
+
+        status(response.code)
+        headers(response.headers)
+        body(response.body)
+
       end
 
       get(//) do
@@ -125,8 +137,12 @@ module Extensions
       end
 
       def instruction
-        MultiJson.load(HTTPI.post("http://#{STUBBY_MASTER}:9000/rules/search.json", 
+        @instruction ||= MultiJson.load(HTTPI.post("http://#{STUBBY_MASTER}:9000/rules/search.json", 
           trigger: "#{request.scheme}://#{request.host}").body)
+      end
+
+      def instruction_params
+        Rack::Utils.parse_nested_query url.query
       end
 
       def url
@@ -180,6 +196,24 @@ module Extensions
         HTTPApp.run!(session)
       end
 
+      # http://blah.com => localhost:3000
+      # =>
+      # http://blah.com => http-proxy://localhost:3000
+      def expand_rule(trigger, instruction, proto='http')
+        u = URI.parse(instruction)
+    
+        (if u.scheme.nil?
+          { trigger => "http-proxy://#{instruction}" }
+        elsif u.scheme == "http"
+          u.scheme = "http-proxy"
+          { trigger => u.to_s }
+        else
+          { trigger => instruction }
+        end).merge({
+          "#{trigger.gsub(proto + "://", "dns://")}/a" => "dns-a://#{STUBBY_MASTER}"
+        })
+      end
+
       def stop!
         HTTPApp.quit!
       end
@@ -195,6 +229,10 @@ module Extensions
 
       def stop!
         HTTPSApp.quit!
+      end
+
+      def expand_rule(trigger, instruction)
+        super(trigger, instruction, "https")
       end
     end
   end

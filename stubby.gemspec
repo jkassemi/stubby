@@ -19,6 +19,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'ipaddress'
   s.add_dependency 'sinatra'
   s.add_dependency 'liquid'
+  s.add_dependency 'oj'
   s.add_dependency 'multi_json'
   s.add_dependency 'httpi'
   s.add_dependency 'rack-ssl'
@@ -27,7 +28,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'listen'
   s.add_dependency 'thin'
   s.add_dependency 'mailcatcher'
-
+  
   s.add_development_dependency "rspec"
  
   s.files        = Dir.glob("{bin,lib}/**/*") + %w(LICENSE README.md)

@@ -1,5 +1,3 @@
-require 'pry'
-
 module Stubby
   class Stub
     attr_accessor :target, :path, :modes
@@ -12,8 +10,11 @@ module Stubby
 
     def modes
       @modes ||= MultiJson.load(File.read(path))
-    rescue
-      {}
+    rescue => e
+      if File.exists?(path)
+        puts "[INFO] Problem parsing #{path}"
+        raise e
+      end
     end
 
     def path=(v)
@@ -25,8 +26,14 @@ module Stubby
       @path = File.expand_path(v)
     end
 
+    def target=(environment)
+      @environment = environment 
+      @options = nil
+      options
+    end
+
     def options
-      modes[target] || {}
+      @options ||= expand(modes[@environment] || {})
     end
 
     def search(trigger)
@@ -38,11 +45,16 @@ module Stubby
 
       return nil
     end
+
+    private
+    def expand(options)
+      Stubby::Api.expand_rules(options) 
+    end
   end
 
   class TransientStub < Stub
     def initialize(options)
-      @options = options
+      @options = expand(options)
     end
 
     def modes 

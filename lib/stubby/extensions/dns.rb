@@ -24,34 +24,18 @@ module Extensions
 
       def process(name, resource_class, transaction)
           body = HTTPI.post("http://#{STUBBY_MASTER}:9000/rules/search.json", 
-            trigger: name).body
+            trigger: "dns://#{name}/#{symbol_from_resource_class(resource_class)}").body
 
           instruction = MultiJson.load(body)
 
           if instruction.nil? or instruction == "@"
-            unless name =~ /^dns-/
-              process("dns-#{symbol_from_resource_class(resource_class)}://#{name}", 
-                resource_class, transaction)
-            else
-              transaction.passthrough!(UPSTREAM)
-            end
-
+            transaction.passthrough!(UPSTREAM)
             return
           end
 
           url = URI.parse(instruction)
 
-          if url.scheme.to_s.empty?
-            url = URI.parse("dns-a://" + instruction)
-          elsif (url.scheme.to_s =~ /^dns-.*/).nil?
-            url.host = STUBBY_MASTER
-          end
-
           response_resource_class = resource url.scheme.gsub('dns-', '')
-
-          if url.host.to_s.empty?
-            url.host = STUBBY_MASTER
-          end
 
           if !IPAddress.valid?(url.host) and response_resource_class == IN::A
             response_resource_class = IN::CNAME
@@ -88,6 +72,19 @@ module Extensions
         teardown_references and stop_dns_server
       end
 
+      def expand_rule(trigger, instruction)
+        i = URI.parse(instruction)
+        t = URI.parse(trigger)
+
+        # If not specifying a record type, match a
+        t.path = "/a" if t.path.empty?
+    
+        if i.scheme.nil?
+          { t.to_s => "dns-a://#{instruction}" }
+        else
+          { t.to_s => instruction }
+        end
+      end
       
       private
 

@@ -1,17 +1,13 @@
 {
-  "test": {
-    "dependencies": {
-      "example": "staging"
-    },
+        "development": {
+          "dependencies": {
+            "example": "staging"
+          },
 
-    "(https?:\/\/)?example.com": "http://localhost:3000"
-  },
+          // Route example.com to the local rails app
+          "example.com": "localhost:3000",
 
-  "staging": {
-    "dependencies": {
-      "example": "staging"
-    },
-    
-    "example.com": "dns-cname://aws..."
-  }
+          // Capture outgoing email (if no remote server is used for delivery)
+          "smtp://.*": "about://blank" 
+        },
 }

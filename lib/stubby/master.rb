@@ -5,8 +5,9 @@ module Stubby
     class << self
       attr_accessor :enabled_stubs
       attr_accessor :registry
+      attr_accessor :master
       attr_accessor :environments, :environment
-
+      
       def enabled_stubs
         @enabled_stubs ||= {} 
       end
@@ -19,6 +20,8 @@ module Stubby
         @enabled_stubs = nil
         @environment = nil
         @registry = nil
+
+        yield if block_given?
       end
 
       def env_settings
@@ -26,16 +29,18 @@ module Stubby
       end
 
       def environment=(name)
-        reset
-        @environment = name
+        reset do
+          @environment = name
 
-        (env_settings["dependencies"] || []).each do |depname, mode|
-          activate(depname, mode)
+          puts "settings: #{env_settings.inspect}"
+
+          (env_settings["dependencies"] || []).each do |depname, mode|
+            activate(depname, mode)
+          end
+
+          env_settings.delete("dependencies")
+          activate_transient(env_settings)
         end
-
-        env_settings.delete("dependencies")
-
-        activate_transient(env_settings)
       end
 
       def activate(name, mode)
@@ -45,7 +50,32 @@ module Stubby
       end
 
       def activate_transient(options, key="_")
+        puts "Transient activation #{options.inspect}, #{key}"
         self.enabled_stubs[key] = TransientStub.new(options)
+      end
+
+      def expand_rules(options)
+        options.inject({}) do |new_opts, (trigger, instruction)|
+          if instruction.is_a? Hash # dependency modes
+            new_opts[trigger] = instruction
+          else 
+            instruction = instruction.gsub("@", STUBBY_MASTER)
+
+            protocol, url = trigger.split("://")
+            url, protocol = protocol, :default if url.nil?
+
+            extension = master.extensions[protocol.to_sym]
+
+            if extension
+              new_opts.delete(trigger)
+              new_opts.merge!(extension.expand_rule(trigger, instruction))
+            else
+              raise "No `#{extension}` extension found for trigger: #{trigger}"
+            end
+          end
+
+          new_opts
+        end
       end
     end
 
@@ -107,15 +137,17 @@ module Stubby
     attr_accessor :extensions, :config
 
     def initialize(environments)
-      @extensions = [
-        Extensions::DNS::Server.new,
-        Extensions::HTTP::Server.new,
-        Extensions::HTTP::SSLServer.new,
-        Extensions::SMTP::Server.new
-      ]
+      @extensions = {
+        default:    Extensions::Default.new,
+        dns:        Extensions::DNS::Server.new,
+        http:       Extensions::HTTP::Server.new,
+        https:      Extensions::HTTP::SSLServer.new,
+        smtp:       Extensions::SMTP::Server.new
+      }
 
       @config = Api
       @config.environments = environments
+      @config.master = self
     end
 
     def environment=(environment)
@@ -141,7 +173,7 @@ module Stubby
     def run_master
       $0 = "stubby: master"
 
-      Api.run! do
+      Api.run! do |server|
         yield
       end
     end
@@ -158,7 +190,7 @@ module Stubby
       Api.stop!
 
       running.each do |process|
-        Process.kill("INT", process)
+        Process.shutdown(process)
       end
 
       puts "Bye."
@@ -169,14 +201,14 @@ module Stubby
     end
 
     def run_extensions
-      @running_extensions ||= @extensions.collect { |plugin|
+      @running_extensions ||= @extensions.collect { |name, plugin|
         Process.fork {
           $0 = "stubby: [extension worker] #{plugin.class.name}"
           plugin.run!(self, {})
         }
       }
 
-      trap("INT") { 
+      trap("INT", important: true) { 
         stop!
       }
 

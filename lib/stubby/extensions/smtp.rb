@@ -6,15 +6,18 @@ module Extensions
       def run!(session, options)
         HTTPI.post("http://#{STUBBY_MASTER}:9000/stubs/transient/activate.json",
           options: MultiJson.dump(smtp_stub), key: "_smtp")
-                          
+
         @process = Process.fork {
+          $0 = "stubby: [extension worker sub] Extensions::SMTP::Server"
+          
           MailCatcher.run! smtp_ip: STUBBY_MASTER,
             smtp_port: 25,
             http_ip: STUBBY_MASTER,
-            http_port: 9001
+            http_port: 9001,
+            daemon: false
         }
 
-        trap("INT"){
+        trap("INT", important: true){
           stop!
         }
 
@@ -23,14 +26,19 @@ module Extensions
 
       def smtp_stub
         {
-          "dns-mx://.*" => "dns-mx://#{STUBBY_MASTER}",
-          "(http:\/\/)?outbox.stubby.dev" => "http://#{STUBBY_MASTER}:9001"
+          "dns://outbox.stubby.dev/a" => "dns-a://#{STUBBY_MASTER}",
+          "http://outbox.stubby.dev" => "http://#{STUBBY_MASTER}:9001"
+        }
+      end
+
+      def expand_rule(trigger, instruction)
+        {
+          "#{trigger.gsub("smtp://", "dns://")}/mx" => "dns-mx://#{STUBBY_MASTER}/?priority=10"
         }
       end
 
       def stop!
-        Process.kill("TERM", @process)
-        exit
+        Process.shutdown(@process)
       end
     end
   end
