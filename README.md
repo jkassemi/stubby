@@ -129,6 +129,19 @@ interfaces and will shut down the stubby server.
 To contribute a stub, just add your stub to the list above and issue a pull
 request.
 
+## Environment Verification
+
+It may be useful to deny requests that aren't routed by a system using stubby,
+or for a site accessed with stubby to display some information about the
+environment requested.
+
+The HTTP and HTTPS extensions both append request headers to proxied 
+requests. A STUBBY_ENV header contains the name of the stubby environment.
+
+Additionally, stubby requests send a STUBBY_KEY header which contains a hash
+that should be unique over the stubby user and the instruction that the trigger
+executed. If you configure your application to track STUBBY_KEY values, you can
+whitelist requests to a stubby system. 
 
 ## Stubbing
 

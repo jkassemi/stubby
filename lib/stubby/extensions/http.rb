@@ -69,55 +69,23 @@ module Extensions
 
       adapter "http-proxy" do
         url.scheme = "http"
-
-        if url.path.empty?
-          # Proxy all requests, preserve incoming path
-          out = url.dup
-          out.path = request.path
-          request = HTTPI::Request.new
-          request.url = out.to_s
-        else
-          # Proxy to the given path
-          request = HTTPI::Request.new
-          request.url = url.to_s
-        end
-
-        response = HTTPI.get(request)
-        response.headers.delete "transfer-encoding"
-        response.headers.delete "connection"
-
-        status(response.code)
-        headers(response.headers)
-        body(response.body)
+        run_proxy
 
       end
 
       adapter "https-proxy" do
         url.scheme = "https"
-
-        if url.path.empty?
-          # Proxy all requests, preserve incoming path
-          out = url.dup
-          out.path = request.path
-          request = HTTPI::Request.new
-          request.url = out.to_s
-        else
-          # Proxy to the given path
-          request = HTTPI::Request.new
-          request.url = url.to_s
-        end
-
-        response = HTTPI.get(request)
-        response.headers.delete "transfer-encoding"
-        response.headers.delete "connection"
-
-        status(response.code)
-        headers(response.headers)
-        body(response.body)
-
+        run_proxy
       end
 
-      get(//) do
+      %w(get post put patch delete options link unlink).each do |method|
+        send(method, //) do
+          run_handler
+        end
+      end
+
+      private
+      def run_handler
         if instruction.nil?
           not_found
         elsif adapter=self.class.adapters[url.scheme]
@@ -125,9 +93,37 @@ module Extensions
         else
           instance_eval &self.class.adapters["default"]
         end
-      end	
+      end
 
-      private
+      def run_proxy
+        if url.path.empty?
+          # Proxy all requests, preserve incoming path
+          out = url.dup
+          out.path = request.path
+          r = HTTPI::Request.new
+          r.url = out.to_s
+        else
+          # Proxy to the given path
+          r = HTTPI::Request.new
+          r.url = url.to_s
+        end
+
+        r.headers["STUBBY_ENV"] = settings.stubby_session.environment
+        r.headers["STUBBY_KEY"] = settings.stubby_session.key(instruction)
+        r.headers["STUBBY_USER"] = settings.stubby_session.user_key
+
+        request.body.rewind
+        r.body = request.body.read
+
+        response = HTTPI.request(request.request_method.downcase.to_sym, r)
+        response.headers.delete "transfer-encoding"
+        response.headers.delete "connection"
+        
+        status(response.code)
+        headers(response.headers)
+        body(response.body)
+      end
+
       def forbidden
         [403, "Forbidden"]
       end

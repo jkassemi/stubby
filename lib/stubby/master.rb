@@ -151,6 +151,18 @@ module Stubby
       @config.environment = environment
     end
 
+    def key(identifier)
+      Digest::MD5.hexdigest(user_key + identifier)
+    end
+
+    def user_key
+      @user_key ||= read_key
+    end
+
+    def environment
+      @config.environment
+    end
+
     def run!(options={})
       run_network do
         run_master do
@@ -160,6 +172,22 @@ module Stubby
     end
 
     private
+    def read_key
+      File.read(keyfile)
+    rescue
+      generate_key
+    end
+
+    def generate_key
+      SecureRandom.hex(50).tap do |key|
+        File.write(keyfile, key)
+      end
+    end
+
+    def keyfile
+      File.expand_path("~/.stubby/key")
+    end
+
     def run_network
       assume_network_interface
       yield
