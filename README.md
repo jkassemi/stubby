@@ -257,3 +257,24 @@ Mail capture is currently provided by the "MailCatcher" gem.
   ":3306": "mysql://"
 * web app front-end: show emails sent, mysql queries made, etc.
 * github installation with no index.json
+* P2P connections allow access to dev systems running stubby (agent mode?)
+
+    "example.com" => "localhost:3000"
+    "tunnel://example.com": "tunnel://jkassemi@stubby.site"
+
+      =>
+
+    On host system:
+
+    "example.com" => "localhost:3000"
+
+    On guest system:
+
+    "dns://example.com/.*" => @
+    "http://example.com" => "tunnel://jkassemi@stubby.site/?to=http://example.com"
+    "https://example.com" => "tunnel://jkassemi@stubby.site/?to=http://example.com"
+    "smtp://.*" => "tunnel://jkassemi@stubby.site/?to=smtp://$1"
+
+
+guest opens a connection to stubby.site, requesting last broadcast of NAT address
+for host. guest attempts udp tunnel with host
