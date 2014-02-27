@@ -63,55 +63,6 @@ module Stubby
         puts HTTPI.post("http://#{STUBBY_MASTER}:9000/environment.json", environment: name).body
       end
     
-      desc "search", "View all available stubs"
-      long_desc <<-LONGDESC
-        View all available registered stubs. These are stubs that you can use
-        as dependencies in Stubfile.json.
-
-        > $ sudo stubby search
-        > {
-        >   "example":[
-        >     {
-        >       "name":"example",
-        >       "version":"v0.0.1",
-        >       ...
-        >    }
-        >  ],
-        >  "spreedly":[
-        >    {
-        >      "name":"spreedly",
-        >      "version":"v0.0.1",
-        >       ...
-        >    }
-        >  ]
-        > }
-
-        Wildcard supported for search:
-
-        > $ sudo stubby search ex*
-        > {
-        >   "example":[
-        >     {
-        >       "name":"example",
-        >       "version":"v0.0.1",
-        >       ...
-        >    }
-        >  ]
-        > }
-
-      LONGDESC
-      def search(name=nil)
-        if master_running?
-          available = MultiJson.load(HTTPI.get("http://#{STUBBY_MASTER}:9000/stubs/available.json").body)
-        else
-          available = Stubby::Api.registry.index
-        end
-
-        puts MultiJson.dump(available.select { |key, ri| 
-          File.fnmatch(name || "*", key)
-        }, pretty: true)
-      end
-
       desc "status", "View current rules"
       long_desc <<-LONGDESC
         > $ sudo bin/stubby status

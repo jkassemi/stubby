@@ -32,8 +32,6 @@ module Stubby
         reset do
           @environment = name
 
-          puts "settings: #{env_settings.inspect}"
-
           (env_settings["dependencies"] || []).each do |depname, mode|
             activate(depname, mode)
           end
@@ -43,10 +41,9 @@ module Stubby
         end
       end
 
-      def activate(name, mode)
-        registry_item = registry.latest(name)
-        registry_item.install
-        self.enabled_stubs[name] = registry_item.stub(mode)
+      def activate(source, mode)
+        registry_item = RegistryItem.new(source)
+        self.enabled_stubs[source] = registry_item.stub(mode)
       end
 
       def activate_transient(options, key="_")

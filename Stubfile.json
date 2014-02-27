@@ -1,13 +1,13 @@
 {
-        "development": {
-          "dependencies": {
-            "example": "staging"
-          },
+  "development": {
+    "dependencies": {
+      "https://github.com/jkassemi/example-stubby.git": "staging"
+    },
 
-          // Route example.com to the local rails app
-          "example.com": "localhost:3000",
+    // Route example.com to the local rails app
+    "example.com": "localhost:3000",
 
-          // Capture outgoing email (if no remote server is used for delivery)
-          "smtp://.*": "about://blank" 
-        }
+    // Capture outgoing email (if no remote server is used for delivery)
+    "smtp://.*": "about://blank" 
+  }
 }
