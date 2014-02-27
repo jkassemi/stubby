@@ -4,11 +4,13 @@ module Extensions
   module SMTP
     class Server
       def run!(session, options)
-        HTTPI.post("http://#{STUBBY_MASTER}:9000/stubs/transient/activate.json",
-          options: MultiJson.dump(smtp_stub), key: "_smtp")
-
         @process = Process.fork {
           $0 = "stubby: [extension worker sub] Extensions::SMTP::Server"
+
+          sleep 2
+
+          HTTPI.post("http://#{STUBBY_MASTER}:9000/stubs/transient/activate.json",
+            options: MultiJson.dump(smtp_stub), key: "_smtp")
           
           MailCatcher.run! smtp_ip: STUBBY_MASTER,
             smtp_port: 25,

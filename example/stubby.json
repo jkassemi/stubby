@@ -19,7 +19,7 @@
     "https://yahoo.com": "https-redirect://duckduckgo.com",
 
     // DNS stubby (for all TLDs), file server contents from dir /var/www/tmp
-    ".*\\.stubby.dev": "file:///var/www/tmp",
+    "tmpdir.stubby.dev": "file:///var/www/tmp",
 
     // DNS stubby, serve HTTP from stubby recipe root (~/.stubby/api.example.com)
     "api.example.com": "file://~/.stubby/example/files",
