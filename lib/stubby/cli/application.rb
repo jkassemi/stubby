@@ -1,5 +1,3 @@
-require 'thor'
-
 require 'stubby/registry'
 require 'stubby/extensions/dns'
 require 'stubby/extensions/http'
@@ -11,6 +9,7 @@ module Stubby
 
       # TODO: filesystem watch all config directories for change
       desc "start ENVIRONMENT", "Starts stubby HTTP and DNS servers"
+      option :stubfile, default: "Stubfile.json"
       long_desc <<-LONGDESC
         > $ sudo stubby start [ENVIRONMENT='development']
 
@@ -25,7 +24,9 @@ module Stubby
       LONGDESC
 
       def start(environment="development")
-        unless File.exists?("Stubfile.json")
+        stubfile = File.expand_path(options[:stubfile])
+
+        unless File.exists?(stubfile)
           puts "[ERROR]: Stubfile.json not found!"
           return
         end
@@ -40,7 +41,7 @@ module Stubby
           return
         end
 
-        environments = MultiJson.load(File.read("Stubfile.json"))
+        environments = MultiJson.load(File.read(stubfile))
 
         File.write(pidfile, Process.pid)
 
