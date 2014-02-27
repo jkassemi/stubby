@@ -42,7 +42,7 @@ usage for the project.
     > {
     >  "test": {
     >    "dependencies": {
-    >      "https://github.com/jkassemi/stubby-example.git": "staging"
+    >      "https://github.com/jkassemi/example-stubby.git": "staging"
     >    },
     >
     >    "example.com": "localhost:3000"
@@ -50,7 +50,7 @@ usage for the project.
     >
     >  "staging": {
     >    "dependencies": {
-    >      "https://github.com/jkassemi/stubby-example.git": "staging"
+    >      "https://github.com/jkassemi/example-stubby.git": "staging"
     >    },
     >
     >    "example.com": "dns-cname://aws..."
@@ -74,7 +74,7 @@ routed to http://localhost:3000. Let's take a look at the rules applied:
 
     > {
     > "rules":{
-    >   "https://github.com/jkassemi/stubby-example.git":{
+    >   "https://github.com/jkassemi/example-stubby.git":{
     >     "dns://admin.example.com/a":"dns-a://172.16.123.1",
     >     "http://admin.example.com":"http-redirect://blank?to=https://admin.example.com&code=302",
     >     "https://admin.example.com":"http-proxy://10.0.1.1",
@@ -96,7 +96,7 @@ routed to http://localhost:3000. Let's take a look at the rules applied:
     >   },
     >   "_":{
     >     "dependencies":{
-    >       "https://github.com/jkassemi/stubby-example.git":"staging"
+    >       "https://github.com/jkassemi/example-stubby.git":"staging"
     >     },
     >     "dns://secured.atpay.com/a":"dns-a://172.16.123.1",
     >     "http://secured.atpay.com":"http-redirect://blank?to=https://secured.atpay.com&code=302",
@@ -124,7 +124,7 @@ interfaces and will shut down the stubby server.
 
 ### Stubs
 
-- example: https://github.com/jkassemi/stubby-example.git 
+- example: https://github.com/jkassemi/example-stubby.git 
 
 To contribute a stub, just add your stub to the list above and issue a pull
 request.
@@ -150,7 +150,7 @@ The example folder is the `example` stub, and the system.json file contains the 
 		
 The example/stubby.json file has two modes, staging, and production:
 
-    > cat ~/.stubby/jkassemi/example/stubby.json
+    > cat ~/.stubby/jkassemi/example-stubby/stubby.json
     { "staging": {...}, "production": {...} }
 
 Each environment contains a number of rules:
