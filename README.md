@@ -28,7 +28,6 @@ Install the stubby gem:
     > Commands:
     >  stubby env NAME           # Switch stubby environment
     >  stubby help [COMMAND]     # Describe available commands or one specific command
-    >  stubby search             # View all available stubs
     >  stubby start ENVIRONMENT  # Starts stubby HTTP and DNS servers, default env ENVIRONMENT
     >  stubby status             # View current rules
 
@@ -75,7 +74,7 @@ routed to http://localhost:3000. Let's take a look at the rules applied:
 
     > {
     > "rules":{
-    >   "example":{
+    >   "https://github.com/jkassemi/stubby-example.git":{
     >     "dns://admin.example.com/a":"dns-a://172.16.123.1",
     >     "http://admin.example.com":"http-redirect://blank?to=https://admin.example.com&code=302",
     >     "https://admin.example.com":"http-proxy://10.0.1.1",
