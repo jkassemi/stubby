@@ -16,6 +16,17 @@ hitting your dev server.
 * lock down access to a dev system only to users running a stubby.json config
 from your project.
 
+
+## Development Status
+
+I've been through several restructurings of this application so far, but
+I finally feel that the Stubfile.json format and the extension / adapter
+organization is clear and complete enough to handle the majority of use
+cases. 
+
+I don't expect major changes to the format from this point forward. Any 
+such changes will be delegated to a major revision change.
+
 ## Installation
 
 Install the stubby gem:
