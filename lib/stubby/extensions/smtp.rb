@@ -12,18 +12,22 @@ module Extensions
           HTTPI.post("http://#{STUBBY_MASTER}:9000/stubs/transient/activate.json",
             options: MultiJson.dump(smtp_stub), key: "_smtp")
           
-          MailCatcher.run! smtp_ip: STUBBY_MASTER,
-            smtp_port: 25,
-            http_ip: STUBBY_MASTER,
-            http_port: 9001,
-            daemon: false
+          while true
+            begin
+              MailCatcher.run! smtp_ip: STUBBY_MASTER,
+                smtp_port: 25,
+                http_ip: STUBBY_MASTER,
+                http_port: 9001,
+                daemon: false
+            rescue
+              puts $!
+            end
+          end
         }
 
         trap("INT", important: true){
           stop!
         }
-
-        sleep
       end
 
       def smtp_stub

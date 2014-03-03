@@ -41,7 +41,10 @@ module Extensions
       set :static, false
 
       adapter "http-redirect" do
-        redirect to(instruction_params["to"])
+        r = URI.parse(instruction_params["to"])
+        r.path = request.path if r.path.blank?
+
+        redirect to(r.to_s)
       end
 
       adapter "file" do
@@ -68,14 +71,11 @@ module Extensions
       end
 
       adapter "http-proxy" do
-        url.scheme = "http"
-        run_proxy
-
+        run_proxy("http")
       end
 
       adapter "https-proxy" do
-        url.scheme = "https"
-        run_proxy
+        run_proxy("https")
       end
 
       %w(get post put patch delete options link unlink).each do |method|
@@ -95,23 +95,25 @@ module Extensions
         end
       end
 
-      def run_proxy
-        if url.path.empty?
-          # Proxy all requests, preserve incoming path
-          out = url.dup
-          out.path = request.path
-          r = HTTPI::Request.new
-          r.url = out.to_s
-        else
-          # Proxy to the given path
-          r = HTTPI::Request.new
-          r.url = url.to_s
-        end
+      def run_proxy(scheme)
+        to = url.dup
+        to.scheme = scheme
+        to.path = request.path if to.path.empty?
+        to.query = request.query_string
 
+        puts "#{to.to_s} scheme: #{request.scheme}"
+
+        r = HTTPI::Request.new
+        r.url = to.to_s
+      
+        r.headers["HOST"] = request.host
         r.headers["STUBBY_ENV"] = settings.stubby_session.environment
         r.headers["STUBBY_KEY"] = settings.stubby_session.key(instruction)
         r.headers["STUBBY_USER"] = settings.stubby_session.user_key
-
+        r.headers["X_FORWARDED_PROTO"] = request.scheme
+        r.headers["X_FORWARDED_FOR"] = request.ip
+        r.headers.merge! Hash[(env.select { |k,v| v.is_a? String }.collect { |k,v| [k.gsub("HTTP_", ""), v] })]
+        r.headers["CONNECTION"] = "close"
         request.body.rewind
         r.body = request.body.read
 
@@ -120,6 +122,8 @@ module Extensions
         response.headers.delete "connection"
         
         status(response.code)
+        puts "response: #{response.headers}"
+
         headers(response.headers)
         body(response.body)
       end
@@ -159,11 +163,6 @@ module Extensions
           set :bind, STUBBY_MASTER
           set :port, port
           set :stubby_session, session
-
-          #super(session, {
-          #  :SSLEnable => true,
-          #  :SSLCertName => %w[CN localhost]
-          #})
 
           Rack::Handler::Thin.run(self, {
             :Host => STUBBY_MASTER,
