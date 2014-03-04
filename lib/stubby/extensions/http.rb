@@ -107,11 +107,11 @@ module Extensions
         r.url = to.to_s
       
         r.headers["HOST"] = request.host
-        r.headers["STUBBY_ENV"] = settings.stubby_session.environment
-        r.headers["STUBBY_KEY"] = settings.stubby_session.key(instruction)
-        r.headers["STUBBY_USER"] = settings.stubby_session.user_key
-        r.headers["X_FORWARDED_PROTO"] = request.scheme
-        r.headers["X_FORWARDED_FOR"] = request.ip
+        r.headers["STUBBY-ENV"] = settings.stubby_session.environment
+        r.headers["STUBBY-KEY"] = settings.stubby_session.key(instruction)
+        r.headers["STUBBY-USER"] = settings.stubby_session.user_key
+        r.headers["X-FORWARDED-PROTO"] = request.scheme
+        r.headers["X-FORWARDED-FOR"] = request.ip
         r.headers.merge! Hash[(env.select { |k,v| v.is_a? String }.collect { |k,v| [k.gsub("HTTP_", ""), v] })]
         r.headers["CONNECTION"] = "close"
         request.body.rewind
