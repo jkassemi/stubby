@@ -1,7 +1,6 @@
 STUBBY_MASTER="172.16.123.1"
 
 require 'rubygems'
-require 'bundler/setup'
 
 require 'oj'
 require 'multi_json'
