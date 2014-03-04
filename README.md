@@ -1,31 +1,22 @@
 # Stubby
 
 A local DNS and HTTP server combo that provides a package manager
-solution to configuring network systems on a development machine. This
-is currently only designed to run on OS X.
+solution to configuring network systems on a development machine. 
 
 Use it to:
 
-* manage your dev domains (like pow, with lethal power)
+* manage your .dev domains
 
 * distribute a spec for your API so developers can run basic tests without
 hitting your dev server.
 
-* point a client to the right version of an app without editing a hosts file.
-
-* lock down access to a dev system only to users running a stubby.json config
-from your project.
-
-
+* get your team on the right system with the proper hosts settings. 
+ 
 ## Development Status
 
-I've been through several restructurings of this application so far, but
-I finally feel that the Stubfile.json format and the extension / adapter
+The Stubfile.json format and the extension / adapter
 organization is clear and complete enough to handle the majority of use
-cases. 
-
-I don't expect major changes to the format from this point forward. Any 
-such changes will be delegated to a major revision change.
+cases. No major changes to the general system or configuration formats.
 
 ## Installation
 
@@ -138,7 +129,7 @@ interfaces and will shut down the stubby server.
 - example: https://github.com/jkassemi/example-stubby.git 
 
 To contribute a stub, just add your stub to the list above and issue a pull
-request.
+request. There is no automated central index.
 
 ## Environment Verification
 
