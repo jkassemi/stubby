@@ -1,7 +1,8 @@
 # Stubby
 
-A local DNS and HTTP server combo that provides a package manager
-solution to configuring network systems on a development machine. 
+A local DNS and HTTP server combo that provides a declarative 
+environment based configuration for talking to servers that aren't
+necessarily in a standard production stack. 
 
 Use it to:
 
