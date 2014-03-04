@@ -30,6 +30,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'oj', '2.5.5'
   s.add_dependency 'thin', '1.5.1'
   s.add_dependency 'mailcatcher', '0.5.12'
+  s.add_dependency 'curb'
 
   s.add_development_dependency "rspec"
   s.add_development_dependency "pry"
