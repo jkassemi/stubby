@@ -106,21 +106,26 @@ module Extensions
         r = HTTPI::Request.new
         r.url = to.to_s
       
+        # TODO: this is a hack, should support streaming the bodies
+        # and handling the headers more systematically (allow
+        # keep-alives and transfer encoding)
+        r.headers.merge! Hash[(env.select { |k,v| v.is_a? String }.collect { |k,v| [k.gsub("HTTP_", "").gsub("_", "-"), v] })]
         r.headers["HOST"] = request.host
         r.headers["STUBBY-ENV"] = settings.stubby_session.environment
         r.headers["STUBBY-KEY"] = settings.stubby_session.key(instruction)
         r.headers["STUBBY-USER"] = settings.stubby_session.user_key
         r.headers["X-FORWARDED-PROTO"] = request.scheme
         r.headers["X-FORWARDED-FOR"] = request.ip
-        r.headers.merge! Hash[(env.select { |k,v| v.is_a? String }.collect { |k,v| [k.gsub("HTTP_", ""), v] })]
         r.headers["CONNECTION"] = "close"
+        r.headers.delete "ACCEPT-ENCODING"
+
         request.body.rewind
         r.body = request.body.read
 
         response = HTTPI.request(request.request_method.downcase.to_sym, r)
-        response.headers.delete "transfer-encoding"
-        response.headers.delete "connection"
         
+        response.headers.delete "TRANSFER-ENCODING"
+
         status(response.code)
         puts "response: #{response.headers}"
 
