@@ -4,7 +4,7 @@ $:.unshift lib unless $:.include?(lib)
  
 Gem::Specification.new do |s|
   s.name        = "stubby"
-  s.version     = "0.0.11"
+  s.version     = "0.0.12"
   s.authors     = ["James Kassemi", "Glen Holcomb"]
   s.email       = ["jkassemi@gmail.com", "damnbigman@gmail.com"]
   s.homepage    = "http://github.com/jkassemi/stubby"
@@ -15,7 +15,6 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = ">= 1.8.23"
   s.rubyforge_project         = "stubby"
  
-  s.add_dependency 'bundler'
   s.add_dependency 'rubydns', '0.7.0'
   s.add_dependency 'liquid', '2.6.1'
   s.add_dependency 'multi_json', '1.8.4'
@@ -30,7 +29,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'oj', '2.5.5'
   s.add_dependency 'thin', '1.5.1'
   s.add_dependency 'mailcatcher', '0.5.12'
-  s.add_dependency 'httpclient'
+  s.add_dependency 'httpclient', '2.3.4.1'
 
   s.add_development_dependency "rspec"
   s.add_development_dependency "pry"
