@@ -126,7 +126,11 @@ module Stubby
 
       private
       def pidfile
-        @pidfile ||= File.expand_path("~/.stubby/pid")
+        @pidfile ||= (
+          home = File.expand_path("~/.stubby")
+          FileUtils.mkdir_p(home) unless File.exists?(home)
+          File.join(home, "pid")
+        )
       end
 
       def master_running?
