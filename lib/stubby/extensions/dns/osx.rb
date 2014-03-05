@@ -15,7 +15,6 @@ module Extensions
 
         def setup_reference(interface)
           return if interface.include? "*"
-          @network_interfaces[interface] = servers_for(interface)
           puts "[INFO] #{interface} configured with Stubby DNS. Will restore to #{@network_interfaces[interface]}"
           `networksetup -setdnsservers '#{interface}' #{STUBBY_MASTER}`
         end
@@ -31,13 +30,32 @@ module Extensions
           # TODO: if we connect to a new network, we'd like that to use us, too
           return if @network_interfaces
 
-          @network_interfaces = {}
-          `networksetup listallnetworkservices`.split("\n").each do |interface|
-            next if interface.include? '*'
+          network_interfaces.each do |interface, servers|
             setup_reference(interface)
           end
 
           flush
+        end
+
+        def network_interfaces
+          # TODO: if we connect to a new network, we'd like that to use us, too
+          return @network_interfaces if @network_interfaces
+
+          @network_interfaces = {}
+          `networksetup listallnetworkservices`.split("\n").each do |interface|
+            next if interface.include? '*'
+            @network_interfaces[interface] = servers_for(interface)
+          end
+
+          @network_interfaces
+        end
+
+        # This is less of a complete restoration and actually
+        # a return to no defaults
+        def restore_references
+          network_interfaces.each do |interface, servers|
+            teardown_reference(interface, ["empty"])
+          end
         end
 
         def teardown_references

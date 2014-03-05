@@ -18,6 +18,10 @@ module Extensions
       puts 'stop! done'
     end
 
+    def restore!
+
+    end
+
     private
     def root_path
       @session.system.root_path

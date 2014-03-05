@@ -50,6 +50,37 @@ module Stubby
         master.run!
       end
 
+      desc "halt", "Shut down if running, restore if not"
+      def halt
+        if master_running?
+          stop
+        else
+          restore
+        end
+      end
+
+      desc "stop", "Stops a running stubby process"
+      def stop
+        if master_running?
+          Process.kill("INT", File.read(pidfile).to_i)
+
+          while master_running?
+            puts "." and sleep 1
+          end 
+        end
+      end
+
+      desc "restore", "Restore defaults"
+      def restore
+        if master_running?
+          puts "[ERROR] Stubby needs to be shut down first"
+          exit
+        end
+
+        master = Stubby::Master.new({})
+        master.restore!
+      end
+
       desc "env NAME", "Switch stubby environment"
       long_desc <<-LONGDESC
         > $ sudo stubby env test

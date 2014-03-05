@@ -217,6 +217,10 @@ module Extensions
       def stop!
         HTTPApp.quit!
       end
+
+      def restore!
+        # nil
+      end
     end
 
     class SSLServer < Server

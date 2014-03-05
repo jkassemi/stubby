@@ -1,7 +1,6 @@
 require 'rubydns'
 require 'ipaddress'
 require 'uri'
-require 'pry'
 
 module Extensions
   module DNS
@@ -70,6 +69,10 @@ module Extensions
 
       def stop!
         teardown_references and stop_dns_server
+      end
+
+      def restore!
+        restore_references
       end
 
       def expand_rule(trigger, instruction)

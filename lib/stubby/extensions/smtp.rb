@@ -42,6 +42,10 @@ module Extensions
       def stop!
         Process.shutdown(@process)
       end
+
+      def restore!
+        # nil 
+      end
     end
   end
 end

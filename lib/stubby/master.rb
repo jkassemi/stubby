@@ -128,6 +128,15 @@ module Stubby
         stub.search(params[:trigger])
       }.compact.first
     end
+
+    post "/stop.json" do
+      Thread.new do
+        sleep 1
+        Process.kill("INT", Process.pid)
+      end
+
+      json status: "ok"
+    end
   end
 
   class Master
@@ -171,6 +180,23 @@ module Stubby
       end
     end
 
+    def restore!
+      restore_extensions
+    end
+
+    def stop!
+      puts "Shutting down..."
+
+      Api.stop!
+
+      running.each do |process|
+        Process.shutdown(process)
+      end
+
+      puts "Bye."
+    end
+
+
     private
     def read_key
       File.read(keyfile)
@@ -209,16 +235,10 @@ module Stubby
       end
     end
 
-    def stop!
-      puts "Shutting down..."
-
-      Api.stop!
-
-      running.each do |process|
-        Process.shutdown(process)
+    def restore_extensions
+      @extensions.each do |name, plugin|
+        plugin.restore!
       end
-
-      puts "Bye."
     end
 
     def running

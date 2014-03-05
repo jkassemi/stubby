@@ -12,6 +12,10 @@ module Extensions
 
     end
 
+    def restore!(*args)
+
+    end
+
     def expand_rule(trigger, instruction)
       # Default expansion:
       #     "example.com": "localhost:3000"
