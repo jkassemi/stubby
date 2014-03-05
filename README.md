@@ -1,17 +1,55 @@
 # Stubby
 
-A local DNS and HTTP server combo that provides a package manager
-solution to configuring network systems on a development machine. 
+Stubby makes your development environment act more like your
+production environment. 
 
-Use it to:
+A local DNS and HTTP server combo that provides a declarative 
+environment based configuration for talking to servers that
+act exactly like production but aren't. 
 
-* manage your .dev domains
+## Philosophy
 
-* distribute a spec for your API so developers can run basic tests without
-hitting your dev server.
+Centralized configuration systems instruct your application how to 
+function on the host environment. Stubby prefers that your application ask
+the environment to mold itself to the needs of the application. 
+
+Consider your app is a manager sent to Germany to lead an automotive 
+operation. The manager has a language dictionary and translates each order
+to German before giving it to the team. Consider the following interaction:
+
+	"Where's the screwdriver?"
+	"Wo ist der Schraubenzieher?"
+	
+	=>
+	
+	"Im roten Feld über die Straße"
+	"In the red box down the street"
+	
+	# Get screwdriver from red box,
+	# screw bolt into metal
+	
+This is what we tell our applications to do when we use a centralized
+configuration:
+
+	"Where's the database?"
+	ENV["DATABASE_URI"]
+	"mysql://blah/"
+	
+	# Connect to database
+	# Execute query
+	
+Stubby is a translator in this instance. Since Stubby knows that you need 
+a screwdriver, and it knows where you look for it, Stubby will make sure 
+that the screwdriver your manager needs is where your manager expects it to be.
+
+## Uses
+
+* manage your .dev domains (or any random old TLD)
+
+* stub APIs so you can run tests locally
 
 * get your team on the right system with the proper hosts settings. 
- 
+
 ## Development Status
 
 The Stubfile.json format and the extension / adapter
