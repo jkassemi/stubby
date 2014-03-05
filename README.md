@@ -3,9 +3,9 @@
 Stubby makes your development environment act more like your
 production environment. 
 
-A local DNS and HTTP server combo that provides a declarative 
-environment based configuration for talking to servers that
-act exactly like production but aren't. 
+A local server suite with a declarative project-specific
+configuration that helps the project see the host environment
+just as it would see production if it were running there.
 
 ## Philosophy
 
