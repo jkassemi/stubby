@@ -144,11 +144,11 @@ module Stubby
 
     def initialize(environments)
       @extensions = {
-        default:    Extensions::Default.new,
-        dns:        Extensions::DNS::Server.new,
-        http:       Extensions::HTTP::Server.new,
-        https:      Extensions::HTTP::SSLServer.new,
-        smtp:       Extensions::SMTP::Server.new
+        default:    Stubby::Extensions::Default.new,
+        dns:        Stubby::Extensions::DNS::Server.new,
+        http:       Stubby::Extensions::HTTP::Server.new,
+        https:      Stubby::Extensions::HTTP::SSLServer.new,
+        smtp:       Stubby::Extensions::SMTP::Server.new
       }
 
       @config = Api
