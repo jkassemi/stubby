@@ -64,12 +64,16 @@ Install the stubby gem:
 
 ## Available Options
 
+
     > $ sudo stubby -h
     > Commands:
     >  stubby env NAME           # Switch stubby environment
+    >  stubby halt               # Shut down if running, restore if not
     >  stubby help [COMMAND]     # Describe available commands or one specific command
-    >  stubby start ENVIRONMENT  # Starts stubby HTTP and DNS servers, default env ENVIRONMENT
+    >  stubby restore            # Restore defaults
+    >  stubby start ENVIRONMENT  # Starts stubby HTTP and DNS servers
     >  stubby status             # View current rules
+    >  stubby stop               # Stops a running stubby process
 
 ## Getting Started
 
