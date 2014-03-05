@@ -38,7 +38,13 @@ module Stubby
 
     def search(trigger)
       options.each do |rule, instruction|
-        if Regexp.new(rule, Regexp::EXTENDED | Regexp::IGNORECASE).match(trigger)
+        if match=Regexp.new(rule, Regexp::EXTENDED | Regexp::IGNORECASE).match(trigger)
+          instruction = instruction.dup
+
+          match.to_a.each_with_index.map do |v, i|
+            instruction.gsub!("$#{i}", v)
+          end
+
           return instruction
         end
       end
